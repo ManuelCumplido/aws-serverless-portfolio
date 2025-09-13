@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+  Author: Manuel Cumplido
+  Descripcion: CloudFormation Template for IAM user, group, and policy
+  Version: "0.0"
+Resources:
+  # S3 bucket for aws backend project
+  BackendProjectBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      # Bucket name is dynamic: includes the AWS region for uniqueness
+      BucketName: !Sub "aws-backend-project-${AWS::Region}"
+      # Versioning is defined but suspended to avoid extra costs
+      VersioningConfiguration:
+        Status: Suspended #Enabled
+        # Encrypt all objects with AES256 by default (no additional cost)
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      # Block all public access for security best practices
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+Outputs:
+  # Output the bucket name for referencing in other stacks
+  MyBucketName:
+    Description: "Final name of the S3 bucket"
+    Value: !Ref MyBucket
+  
+  # Output the bucket ARN (useful for IAM policies or cross-stack references)
+  BucketArn:
+    Description: "ARN of the S3 bucket"
+    Value: !GetAtt BackendProjectBucket.Arn
