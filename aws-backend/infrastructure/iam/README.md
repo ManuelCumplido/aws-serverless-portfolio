@@ -2,7 +2,7 @@
 
 This folder contains AWS CloudFormation templates related to IAM resources for the project.
 
-### template-iam.yaml
+### iam-stack.yaml
 - Creates an IAM user named `Groot`
 - Creates an IAM group named `Avengers`
 - Associates `Groot` to the `Avengers` group
