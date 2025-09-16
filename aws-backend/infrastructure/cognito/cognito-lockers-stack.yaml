@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Cognito SmartLockers User Pool, Client, Domain and Groups"
+
+Resources:
+  # Main User Pool for SmartLockers authentication
+  SmartLockersUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: smartlockers-userpool
+      AutoVerifiedAttributes: # Automatically verify user emails/phone numbers
+        - email
+        # - phone_number
+      # Password policy with basic security requirements
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+
+  # App Client associated with the User Pool
+  SmartLockersUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: smartlockers-client
+      UserPoolId: !Ref SmartLockersUserPool
+      GenerateSecret: false # Do not generate secret (frontend/mobile-friendly)
+      ExplicitAuthFlows: # Allowed authentication flows
+        - ALLOW_USER_PASSWORD_AUTH   # Direct user/password authentication
+        - ALLOW_REFRESH_TOKEN_AUTH   # Refresh tokens for session renewal
+        - ALLOW_USER_SRP_AUTH        # Secure Remote Password flow (recommended)
+      CallbackURLs:                  # Redirect after login
+        - https://localhost:3000/callback # Local frontend (React/Angular/etc.) during development
+        - https://oidcdebugger.com/debug  # Online tool to test OIDC flows without a frontend
+      LogoutURLs:                    # Redirect after logout
+        - https://localhost:3000/logout
+        - https://oidcdebugger.com/debug
+      SupportedIdentityProviders:
+        - COGNITO
+
+  # Cognito Hosted UI domain for authentication
+  SmartLockersUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: smartlockers-auth # Must be unique per AWS region
+      UserPoolId: !Ref SmartLockersUserPool
+
+  # User Group for administrators
+  SmartLockersAdminsGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: admins
+      Description: "Administradores de SmartLockers"
+      UserPoolId: !Ref SmartLockersUserPool
+      Precedence: 1 # Lower number = higher priority when user belongs to multiple groups
+
+  # User Group for end users
+  SmartLockersUsersGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: users
+      Description: "Usuarios finales de SmartLockers"
+      UserPoolId: !Ref SmartLockersUserPool
+      Precedence: 2 # Higher precedence value, lower priority
+
+Outputs:
+  # Exported User Pool ID to be used in other stacks
+  UserPoolId:
+    Description: ID of the Cognito User Pool
+    Value: !Ref SmartLockersUserPool
+    Export:
+      Name: SmartLockersUserPoolId
+
+  # Exported User Pool Client ID to be used in other stacks
+  UserPoolClientId:
+    Description: ID of the Cognito User Pool Client
+    Value: !Ref SmartLockersUserPoolClient
+    Export:
+      Name: SmartLockersUserPoolClientId
+
+  # Exported Cognito Hosted UI domain for testing authentication
+  CognitoDomain:
+    Description: Cognito Hosted UI domain
+    Value: !Sub "https://${SmartLockersUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com"
+    Export:
+      Name: SmartLockersCognitoDomain

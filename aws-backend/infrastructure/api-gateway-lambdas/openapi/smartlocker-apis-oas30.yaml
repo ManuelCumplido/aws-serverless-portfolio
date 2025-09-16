@@ -1,0 +1,49 @@
+openapi: "3.0.3"
+info:
+  title: "SmartLocker API"
+  version: "1.0.0"
+
+# Apply Cognito authorizer globally
+security:
+  - CognitoAuthorizer: []
+
+paths:
+  /lockers:
+    post:
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        "200":
+          description: "200 response"
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: !Sub >
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
+          arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:create-locker-${EnvironmentKey}/invocations
+        responses:
+          default:
+            statusCode: "200"
+        passthroughBehavior: when_no_match
+        contentHandling: CONVERT_TO_TEXT
+
+components:
+  securitySchemes:
+    CognitoAuthorizer:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authorizer:
+        type: cognito_user_pools
+        providerARNs:
+          - !Sub arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${SmartLockersUserPool}

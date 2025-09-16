@@ -16,3 +16,11 @@ region = "us-east-1"
 s3_bucket = "lockers-infra-artifacts-dev"
 parameter_overrides = "EnvironmentKey=\"dev\""
 confirm_changeset = true
+
+[cognito-dev.deploy.parameters]
+stack_name = "lockers-cognito-dev"
+template_file = "infrastructure/cognito/cognito-lockers-stack.yaml"
+region = "us-east-1"
+s3_bucket = "lockers-infra-artifacts-dev"
+parameter_overrides = "EnvironmentKey=\"dev\""
+confirm_changeset = true
