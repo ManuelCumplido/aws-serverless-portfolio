@@ -1,0 +1,57 @@
+# SAM Template: CreateLocker Lambda
+# This template provisions a Lambda function that handles POST /lockers
+# for the SmartLocker demo project.
+# It includes function configuration,
+# environment variables, API Gateway integration, and explicit log group.
+
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: Lambda function to create a SmartLocker entry (demo project)
+
+# EnvironmentKey: allows multi-environment deployments (dev, staging, prod).
+# LockersTableName: DynamoDB table name for storing lockers (to be imported later).
+Parameters:
+  EnvironmentKey:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - production
+  #LockersTableName:
+    #Type: String
+
+Resources:
+  CreateLockerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "create-locker-${EnvironmentKey}" # Function name with environment suffix
+      CodeUri: ../src/create-locker/ # Source code location for the Lambda
+      Description: Handles POST /lockers to create new locker entries in database
+      Handler: index.handler
+      Runtime: nodejs20.x
+      MemorySize: 128
+      Timeout: 3 # Explicit timeout (default is 3s). Defines max execution time
+      RoleName:
+        Fn::ImportValue: !Sub "CreateLockerLambdaRoleArn-${EnvironmentKey}"
+      Environment:
+        Variables:
+          #TABLE_NAME: !Sub "${LockersTableName}-${EnvironmentKey}" # DynamoDB table (dynamic per environment)
+          REGION: !Ref "AWS::Region" # AWS region where this Lambda is deployed
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: 
+              Fn::ImportValue: !Sub "ApiGatewayId-${EnvironmentKey}" # Import API Gateway ID from another stack
+            Path: /lockers
+            Method: POST # Exposes this Lambda through API Gateway (POST /lockers)
+
+# Explicit log group for Lambda
+# - Retention is set to 15 days to reduce costs and avoid keeping unnecessary logs.
+# - Without this, CloudWatch would create the log group automatically with no retention policy (infinite storage)
+CreateLockerLambdaLogGroup:
+  Type: AWS::Logs::LogGroup
+  Properties:
+    LogGroupName: !Sub /aws/lambda/${CreateLockerLambda}
+    RetentionInDays: 15
