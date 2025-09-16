@@ -1,0 +1,18 @@
+version = 0.1
+
+[iam-dev.deploy.parameters]
+stack_name = "lockers-iam-dev"
+template_file = "infrastructure/iam/iam-lockers-stack.yaml"
+region = "us-east-1"
+s3_bucket = "lockers-infra-artifacts-dev"
+capabilities = "CAPABILITY_NAMED_IAM"
+parameter_overrides = "EnvironmentKey=\"dev\""
+confirm_changeset = true
+
+[dynamodb-dev.deploy.parameters]
+stack_name = "lockers-dynamodb-dev"
+template_file = "infrastructure/database/dynamodb-lockers-stack.yaml"
+region = "us-east-1"
+s3_bucket = "lockers-infra-artifacts-dev"
+parameter_overrides = "EnvironmentKey=\"dev\""
+confirm_changeset = true
