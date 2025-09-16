@@ -1,0 +1,166 @@
+# SAM Template: LockersTable (DynamoDB)
+# This template provisions DynamoDB tables for the SmartLocker demo project.
+# It includes tables configuration, a Global Secondary Index (GSI),
+# point-in-time recovery (PITR), deletion protection,
+# auto-scaling for read/write capacity, and exportable outputs.
+# The configuration is optimized for demo purposes with minimal costs
+# while still demonstrating best practices such as scalability and resilience.
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: DynamoDB table for SmartLocker demo project
+
+Parameters:
+  EnvironmentKey:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - production
+
+Resources:
+  # DynamoDB Table definition
+  LockersTable: 
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "LockersTable-${EnvironmentKey}" # Dynamic table name per environment
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true # Enables continuous backups
+      DeletionProtectionEnabled: true # Prevents accidental deletion
+      AttributeDefinitions: 
+        - AttributeName: "lockerId"
+          AttributeType: "S"
+        - AttributeName: "ownerId"
+          AttributeType: "S"
+      KeySchema: 
+        - AttributeName: "lockerId"
+          KeyType: "HASH" # Primary key: lockerId
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "1"
+        WriteCapacityUnits: "1"
+        # Minimum provisioned throughput to stay within Free Tier
+      GlobalSecondaryIndexes: 
+        - IndexName: "ownerId-index"
+          KeySchema: 
+            - AttributeName: "ownerId"
+              KeyType: "HASH"
+          Projection: 
+            ProjectionType: "ALL" # Return all attributes on queries
+          ProvisionedThroughput: 
+            ReadCapacityUnits: "1"
+            WriteCapacityUnits: "1"
+
+  # AutoScaling: Table Write Capacity
+  LockersTableWriteCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: LockersTable
+    Properties:
+      MinCapacity: 1 # Minimum write capacity (1 WCU = 1 write/sec of 1KB)
+      MaxCapacity: 5 # Maximum write capacity (5 WCU = 5 write/sec of 1KB)
+      ResourceId: !Sub "table/LockersTable-${EnvironmentKey}"
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+      ScalableDimension: dynamodb:table:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+
+  LockersTableWriteScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: LockersTableWriteAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref LockersTableWriteCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration: 
+        TargetValue: 80 # Target 80% utilization before scaling out
+        ScaleInCooldown: 60 # Wait 60s before scaling in
+        ScaleOutCooldown: 60 # Wait 60s before scaling out
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+
+  # AutoScaling: Table Read Capacity
+  LockersTableReadCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: LockersTable
+    Properties:
+      MinCapacity: 1 # Minimum read capacity (1 RCU = 1 reads/sec of 4KB)
+      MaxCapacity: 5 # Maximum read capacity (5 RCU = 5 reads/sec of 4KB)
+      ResourceId: !Sub "table/LockersTable-${EnvironmentKey}"
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+      ScalableDimension: dynamodb:table:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+
+  LockersTableReadScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: LockersTableReadAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref LockersTableReadCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration: 
+        TargetValue: 80
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+
+  # AutoScaling: GSI ownerId-index [Write capacity]
+  LockersOwnerIndexWriteCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: LockersTable
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 5
+      ResourceId: !Sub "table/LockersTable-${EnvironmentKey}/index/ownerId-index"
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+      ScalableDimension: dynamodb:index:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+
+  LockersOwnerIndexWriteScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: LockersOwnerIndexWriteAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref LockersOwnerIndexWriteCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration: 
+        TargetValue: 80
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+
+  #AutoScaling: GSI ownerId-index [Read capacity]
+  LockersOwnerIndexReadCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: LockersTable
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 5
+      ResourceId: !Sub "table/LockersTable-${EnvironmentKey}/index/ownerId-index"
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+      ScalableDimension: dynamodb:index:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+
+  LockersOwnerIndexReadScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: LockersOwnerIndexReadAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref LockersOwnerIndexReadCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration: 
+        TargetValue: 80
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+
+Outputs:
+  # Export the physical table name so Lambdas can import and use it as env vars.
+  LockersTableName:
+    Description: Name of the DynamoDB table
+    Value: !Ref LockersTable
+    Export:
+      Name: !Sub "LockersTableName-${EnvironmentKey}"
+
+  # Export the ARN so IAM policies can apply least-privilege access.
+  LockersTableArn:
+    Description: ARN of the DynamoDB table
+    Value: !GetAtt LockersTable.Arn
+    Export:
+      Name: !Sub "LockersTableArn-${EnvironmentKey}"
