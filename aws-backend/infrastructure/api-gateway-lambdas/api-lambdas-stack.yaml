@@ -1,0 +1,99 @@
+# This template provisions an API Gateway for the "SmartLocker" demo project.
+# It includes stage configuration, logging into CloudWatch, and useful outputs
+# that can be imported by other stacks (e.g., Lambda functions).
+
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: SAM Template for SmartLocker REST API Gateway (demo project)
+
+# EnvironmentKey parameter allows multi-environment deployments.
+# Avoids hardcoding "dev/prod" and simplifies CI/CD pipelines.
+Parameters:
+  EnvironmentKey:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - production
+
+Resources:
+  SmartLockerApiGateway:
+    DependsOn: ApiGatewayAccount # API Gateway depends on the logging account setup
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref EnvironmentKey # Stage name matches the environment (dev, staging, prod)
+      Name: !Sub "smart-lockers-api-${EnvironmentKey}" # Dynamic API name per environment
+      TracingEnabled: true # Enables AWS X-Ray tracing for observability
+      OpenApiVersion: 3.0.3 # Use OpenAPI 3.0.3 instead of legacy Swagger 2.0
+      EndpointConfiguration:
+        Type: REGIONAL # REGIONAL is recommended over EDGE (legacy) or PRIVATE (VPC-only)
+      Variables:
+        EnvironmentKey: !Ref EnvironmentKey # Stage variable accessible inside API Gateway
+      DefinitionBody:
+        Fn::Transform:
+          Name: "AWS::Include"
+          Parameters:
+            Location: ./openapi/smartlocker-apis-oas30.json
+            # Includes an external OpenAPI specification file for modularity and maintainability
+
+  # Configures API Gateway to use an IAM role
+  # so it can publish execution/access logs to CloudWatch.
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGwExecutionRole.Arn
+
+  # Allows API Gateway to assume this role via STS
+  ApiGwExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: ApiGwLoggingPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "*"
+                Resource: "*"
+
+  CreateLockerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "create-locker-${EnvironmentKey}" # Function name with environment suffix
+      CodeUri: ../src/create-locker/ # Source code location for the Lambda
+      Description: Handles POST /lockers to create new locker entries in database
+      Handler: index.handler
+      Runtime: nodejs20.x
+      MemorySize: 128
+      Timeout: 3 # Explicit timeout (default is 3s). Defines max execution time
+      Role: 
+        Fn::ImportValue: 
+          Fn::Sub: "CreateLockerLambdaRoleArn-${EnvironmentKey}"
+      Environment:
+        Variables:
+          #TABLE_NAME: !Sub "${LockersTableName}-${EnvironmentKey}" # DynamoDB table (dynamic per environment)
+          REGION: !Ref "AWS::Region" # AWS region where this Lambda is deployed
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SmartLockerApiGateway
+            Path: /lockers
+            Method: POST # Exposes this Lambda through API Gateway (POST /lockers)
+
+  # Explicit log group for Lambda
+  # - Retention is set to 15 days to reduce costs and avoid keeping unnecessary logs.
+  # - Without this, CloudWatch would create the log group automatically with no retention policy (infinite storage)
+  CreateLockerLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${CreateLockerLambda}
+      RetentionInDays: 14
