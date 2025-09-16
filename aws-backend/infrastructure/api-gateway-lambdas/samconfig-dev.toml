@@ -6,5 +6,5 @@ template_file = "api-lambdas-stack.yaml"
 confirm_changeset = true
 region = "us-east-1"
 s3_bucket = "lockers-infra-artifacts-dev"
-parameter_overrides = "EnvironmentKey=\"dev\""
+parameter_overrides = "EnvironmentKey=dev SmartLockersUserPool=us-east-1_Of6C50lJc"
 capabilities = "CAPABILITY_NAMED_IAM"

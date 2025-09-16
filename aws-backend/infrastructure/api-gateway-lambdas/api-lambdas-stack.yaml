@@ -16,6 +16,9 @@ Parameters:
       - dev
       - staging
       - production
+  SmartLockersUserPool:
+    Type: String
+    Description: Cognito User Pool ID (imported from Cognito stack)
 
 Resources:
   SmartLockerApiGateway:
@@ -30,8 +33,47 @@ Resources:
         Type: REGIONAL # REGIONAL is recommended over EDGE (legacy) or PRIVATE (VPC-only)
       Variables:
         EnvironmentKey: !Ref EnvironmentKey # Stage variable accessible inside API Gateway
-      DefinitionUri: ./openapi/smartlocker-apis-oas30.json
-            # Includes an external OpenAPI specification file for modularity and maintainability
+
+      DefinitionBody:
+        openapi: "3.0.3"
+        info:
+          title: "SmartLocker API"
+          version: "1.0.0"
+        paths:
+          /lockers:
+            post:
+              parameters:
+                - name: Content-Type
+                  in: header
+                  required: true
+                  schema:
+                    type: string
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                required: true
+              responses:
+                "200":
+                  description: "200 response"
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:create-locker-${EnvironmentKey}/invocations
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: when_no_match
+                contentHandling: CONVERT_TO_TEXT
+
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !Sub arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${SmartLockersUserPool}
+            Identity:
+              Header: Authorization  
 
   # Configures API Gateway to use an IAM role
   # so it can publish execution/access logs to CloudWatch.
@@ -88,7 +130,7 @@ Resources:
             Method: POST # Exposes this Lambda through API Gateway (POST /lockers)
 
   # Explicit log group for Lambda
-  # - Retention is set to 15 days to reduce costs and avoid keeping unnecessary logs.
+  # - Retention is set to 14 days to reduce costs and avoid keeping unnecessary logs.
   # - Without this, CloudWatch would create the log group automatically with no retention policy (infinite storage)
   CreateLockerLambdaLogGroup:
     Type: AWS::Logs::LogGroup
