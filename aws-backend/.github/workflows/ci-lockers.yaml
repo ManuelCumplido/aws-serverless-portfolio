@@ -1,0 +1,63 @@
+name: CI - SmartLockers
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+    types: [opened, reopened]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        # This action clones the repository into the GitHub Actions runner.
+        # Without this step, the workflow would not have access to your code (no package.json, no infrastructure/ folder, etc.).
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha}}
+
+      # Setup Node.js runtime (used for AWS Lambda functions in this project)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Cache npm dependencies to speed up builds
+      # - The cache is stored based on the OS + a hash of package-lock.json
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            # Fallback in case the exact key is not found
+            ${{ runner.os }}-node-
+
+      # Install project dependencies from package.json
+      - name: Install dependencies
+        run: npm install
+
+      # Run ESLint to check code style and detect errors in JavaScript files
+      - name: Run ESLint
+        run: npx eslint . --ext .js,.mjs,.cjs
+
+      # Run unit tests (with coverage report enabled)
+      - name: Run tests
+        run: npm test -- --coverage
+
+      # Setup AWS SAM CLI (recommended instead of pip)
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          version: latest
+
+      # Validate AWS SAM templates (CloudFormation IaC files)
+      - name: Validate all SAM templates
+        run: |
+          sam validate --lint --template-file infrastructure/api-gateway/api-gateway-stack.yaml
+          sam validate --lint --template-file infrastructure/lambdas/device-lambda-stack.yaml
+          sam validate --lint --template-file infrastructure/lambdas/auth-lambda-stack.yaml
+          sam validate --lint --template-file infrastructure/iam/iam-stack.yaml
