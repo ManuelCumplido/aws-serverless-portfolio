@@ -72,19 +72,6 @@ Resources:
                 # so API Gateway can create and write logs in CloudWatch.
 
 Outputs:
-  # Exports the API Gateway ID so other stacks (e.g., Lambdas) can reference it
-  ApiGatewayId:
-    Description: API Gateway ID
-    Value: !Ref SmartLockerApiGateway
-    Export:
-      Name: !Sub "ApiGatewayId-${EnvironmentKey}"
-
-  # Exports the stage name, useful for deployments and debugging
-  ApiGatewayStage:
-    Description: API Gateway stage name
-    Value: !Ref EnvironmentKey
-    Export:
-      Name: !Sub "ApiGatewayStage-${EnvironmentKey}"
 
   # Exports the base URL of the API, useful for testing and integration
   ApiGatewayRootUrl:

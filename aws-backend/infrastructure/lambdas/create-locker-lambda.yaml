@@ -20,6 +20,8 @@ Parameters:
       - production
   #LockersTableName:
     #Type: String
+  ApiGatewayId:
+    Type: String
 
 Resources:
   CreateLockerLambda:
@@ -41,7 +43,7 @@ Resources:
         ApiEvent:
           Type: Api
           Properties:
-            RestApiId: !ImportValue ApiGatewayId-${EnvironmentKey}  # Import API Gateway ID from another stack
+            RestApiId: !Ref ApiGatewayId
             Path: /lockers
             Method: POST # Exposes this Lambda through API Gateway (POST /lockers)
 
