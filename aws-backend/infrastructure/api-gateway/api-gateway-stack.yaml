@@ -1,0 +1,94 @@
+# This template provisions an API Gateway for the "SmartLocker" demo project.
+# It includes stage configuration, logging into CloudWatch, and useful outputs
+# that can be imported by other stacks (e.g., Lambda functions).
+
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: SAM Template for SmartLocker REST API Gateway (demo project)
+
+# EnvironmentKey parameter allows multi-environment deployments.
+# Avoids hardcoding "dev/prod" and simplifies CI/CD pipelines.
+Parameters:
+  EnvironmentKey:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - production
+
+Resources:
+  SmartLockerApiGateway:
+    DependsOn: ApiGatewayAccount # API Gateway depends on the logging account setup
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref EnvironmentKey # Stage name matches the environment (dev, staging, prod)
+      Name: !Sub "smart-lockers-api-${EnvironmentKey}" # Dynamic API name per environment
+      TracingEnabled: true # Enables AWS X-Ray tracing for observability
+      OpenApiVersion: 3.0.3 # Use OpenAPI 3.0.3 instead of legacy Swagger 2.0
+      EndpointConfiguration:
+        Type: REGIONAL # REGIONAL is recommended over EDGE (legacy) or PRIVATE (VPC-only)
+      Variables:
+        EnvironmentKey: !Ref EnvironmentKey # Stage variable accessible inside API Gateway
+      DefinitionBody:
+        Fn::Transform:
+          Name: "AWS::Include"
+          Parameters:
+            Location: ./openapi/smartlocker-apis-oas30.json
+            # Includes an external OpenAPI specification file for modularity and maintainability
+
+  # Configures API Gateway to use an IAM role
+  # so it can publish execution/access logs to CloudWatch.
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGwExecutionRole.Arn
+
+  # Allows API Gateway to assume this role via STS
+  ApiGwExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: ApiGwLoggingPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                Resource: "*"
+                # Grants only the required permissions (least privilege)
+                # so API Gateway can create and write logs in CloudWatch.
+
+Outputs:
+  # Exports the API Gateway ID so other stacks (e.g., Lambdas) can reference it
+  ApiGatewayId:
+    Description: API Gateway ID
+    Value: !Ref SmartLockerApiGateway
+    Export:
+      Name: !Sub "ApiGatewayId-${EnvironmentKey}"
+
+  # Exports the stage name, useful for deployments and debugging
+  ApiGatewayStage:
+    Description: API Gateway stage name
+    Value: !Ref EnvironmentKey
+    Export:
+      Name: !Sub "ApiGatewayStage-${EnvironmentKey}"
+
+  # Exports the base URL of the API, useful for testing and integration
+  ApiGatewayRootUrl:
+    Description: Base invoke URL
+    Value: !Sub "https://${SmartLockerApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentKey}"
+    Export:
+      Name: !Sub "ApiGatewayRootUrl-${EnvironmentKey}"
