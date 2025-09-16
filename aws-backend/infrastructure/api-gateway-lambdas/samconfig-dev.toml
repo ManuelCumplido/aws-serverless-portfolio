@@ -1,0 +1,10 @@
+version = 0.1
+
+[api-dev.deploy.parameters]
+stack_name = "lockers-api-dev"
+template_file = "api-lambdas-stack.yaml"
+confirm_changeset = true
+region = "us-east-1"
+s3_bucket = "lockers-infra-artifacts-dev"
+parameter_overrides = "EnvironmentKey=\"dev\""
+capabilities = "CAPABILITY_NAMED_IAM"
