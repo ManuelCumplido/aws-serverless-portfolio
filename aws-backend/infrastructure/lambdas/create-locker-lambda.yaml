@@ -32,8 +32,7 @@ Resources:
       Runtime: nodejs20.x
       MemorySize: 128
       Timeout: 3 # Explicit timeout (default is 3s). Defines max execution time
-      RoleName:
-        Fn::ImportValue: !Sub "CreateLockerLambdaRoleArn-${EnvironmentKey}"
+      Role: !ImportValue CreateLockerLambdaRoleArn-${EnvironmentKey}
       Environment:
         Variables:
           #TABLE_NAME: !Sub "${LockersTableName}-${EnvironmentKey}" # DynamoDB table (dynamic per environment)
@@ -42,8 +41,7 @@ Resources:
         ApiEvent:
           Type: Api
           Properties:
-            RestApiId: 
-              Fn::ImportValue: !Sub "ApiGatewayId-${EnvironmentKey}" # Import API Gateway ID from another stack
+            RestApiId: !ImportValue ApiGatewayId-${EnvironmentKey}  # Import API Gateway ID from another stack
             Path: /lockers
             Method: POST # Exposes this Lambda through API Gateway (POST /lockers)
 
