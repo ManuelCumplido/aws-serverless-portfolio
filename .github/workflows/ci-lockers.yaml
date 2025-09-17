@@ -52,7 +52,7 @@ jobs:
       - name: Setup AWS SAM CLI
         uses: aws-actions/setup-sam@v2
         with:
-          version: latest
+          version: 1.* # "version: 1.*" means: always install the latest stable available release in the 1.x series.
 
       # Validate AWS SAM templates (CloudFormation IaC files)
       - name: Validate all SAM templates
