@@ -1,0 +1,62 @@
+# IAM Stack: Roles and Policies for SmartLocker Lambdas
+# This template provisions IAM roles and managed policies
+# specifically for the SmartLocker demo project.
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: IAM roles and policies for SmartLocker Lambdas (demo project)
+
+# EnvironmentKey: allows multi-environment deployments (dev, staging, prod).
+# Avoids hardcoding environment names and ensures unique resource naming.
+Parameters:
+  EnvironmentKey:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - production
+
+# Managed Policies
+# Centralized definition of custom IAM policies.
+# Each policy grants only the permissions required for a specific use case
+# This shows how to apply principle of least privilege.   
+Resources:
+  LockerDynamoDBReadWritePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "locker-dynamodb-put-policy-${EnvironmentKey}"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              #- dynamodb:PutItem
+              #- dynamodb:GetItem
+              - dynamodb:UpdateItem
+              #- dynamodb:DeleteItem
+            Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/LockersTable-${EnvironmentKey}"
+
+  # Role for CreateLocker Lambda
+  CreateLockerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "create-locker-role-${EnvironmentKey}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole # Grants Lambda permissions to write logs in CloudWatch
+        - !Ref LockerDynamoDBReadWritePolicy # Custom DynamoDB policy
+
+# Export the Lambda role ARN so it can be imported by the Lambda stack.
+# Using EnvironmentKey ensures unique exports across environments.
+Outputs:
+  CreateLockerLambdaRoleArn:
+    Description: ARN of the role for CreateLocker Lambda
+    Value: !GetAtt CreateLockerLambdaRole.Arn
+    Export:
+      Name: !Sub "CreateLockerLambdaRoleArn-${EnvironmentKey}"

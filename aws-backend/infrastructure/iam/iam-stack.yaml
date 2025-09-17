@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+  Author: Manuel Cumplido
+  Descripcion: CloudFormation Template for IAM user, group, and policy
+  Version: "0.0"
+Resources:
+  # IAM User: represents the user "Groot"
+  GrootUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: "Groot"
+      Tags:
+        - Key: Guardian
+          Value: "Galaxy"
+
+  # IAM Group: represents the Avengers group
+  AvengerGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: "Avengers"
+
+  # Associate GrootUser to AvengerGroup
+  AssociationUserToGroup:
+    Type: AWS::IAM::UserToGroupAddition
+    Properties:
+      GroupName: !Ref AvengerGroup
+      Users:
+        - !Ref GrootUser
+
+  # Policy to allow listing all S3 buckets
+  Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: S3ListBucketsPolicy
+      Groups:
+        - !Ref AvengerGroup
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: Statement1
+            Effect: Allow
+            Action:
+              - "s3:ListAllMyBuckets"
+            Resource: "*"
