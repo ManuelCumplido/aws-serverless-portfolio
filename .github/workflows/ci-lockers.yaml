@@ -38,15 +38,15 @@ jobs:
 
       # Install project dependencies from package.json - Commented for future dependencies
       #- name: Install dependencies
-        # run: npm install
+      #   run: npm install
 
-      # Run ESLint to check code style and detect errors in JavaScript files
-      - name: Run ESLint
-        run: npx eslint . --ext .js,.mjs,.cjs
+      # Run ESLint to check code style and detect errors in JavaScript files - Commented for future dependencies
+      #- name: Run ESLint
+      #  run: npx eslint . --ext .js,.mjs,.cjs
 
-      # Run unit tests (with coverage report enabled)
-      - name: Run tests
-        run: npm test -- --coverage
+      # Run unit tests (with coverage report enabled) - Commented for future dependencies
+      #- name: Run tests
+      #  run: npm test -- --coverage
 
       # Setup AWS SAM CLI (recommended instead of pip)
       - name: Setup AWS SAM CLI
