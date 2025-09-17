@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Checkout repo
         # This action clones the repository into the GitHub Actions runner.
-        # Without this step, the workflow would not have access to your code (no package.json, no infrastructure/ folder, etc.)
+        # Without this step, the workflow would not have access to your code (no package.json, no infrastructure/ folder, etc.).
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha}}
@@ -52,7 +52,7 @@ jobs:
       - name: Setup AWS SAM CLI
         uses: aws-actions/setup-sam@v2
         with:
-          version: latest
+          version: 1.* # "version: 1.*" means: always install the latest stable available release in the 1.x series.
 
       # Validate AWS SAM templates (CloudFormation IaC files)
       - name: Validate all SAM templates
