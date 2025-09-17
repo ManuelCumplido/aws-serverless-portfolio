@@ -26,7 +26,7 @@ jobs:
           node-version: "20"
 
       # Cache npm dependencies to speed up builds
-      # - The cache is stored based on the OS + a hash of package-lock.json
+      # The cache is stored based on the OS + a hash of package-lock.json
       - name: Cache node modules
         uses: actions/cache@v4
         with:
