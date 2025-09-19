@@ -120,6 +120,6 @@ Manuel Cumplido
 
 - 🎓 AWS Certified Solutions Architect – Associate | AWS Certified Cloud Practitioner
 
-- 🌐 [LinkedIn](www.linkedin.com/in/manuel-cumplido)  
+- 🌐 [LinkedIn](https://www.linkedin.com/in/manuel-cumplido)
 
 - 📧 manuelcumplido.9@gmail.com
