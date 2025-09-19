@@ -1,0 +1,103 @@
+📦 AWS Serverless Portfolio
+📌 Overview
+
+This project demonstrates a serverless architecture on AWS, showcasing a secure API built with API Gateway, Lambda, DynamoDB, Cognito, and IAM.
+It was designed as part of my professional portfolio to highlight best practices in serverless development, infrastructure as code (IaC), and CI/CD automation.
+
+🚀 Architecture
+
+Amazon API Gateway (REST) – Entry point for client requests.
+
+Amazon Cognito – User authentication and identity management.
+
+AWS IAM Roles & Policies – Fine-grained authorization for Lambda and AWS resources.
+
+AWS Lambda – Stateless business logic.
+
+Amazon DynamoDB – NoSQL storage.
+
+AWS SAM (IaC) – Infrastructure provisioning and management.
+
+📊 Diagram:
+
+<!-- TODO: add your diagram here -->
+🛠️ Tech Stack
+
+Languages: Node.js (JavaScript)
+
+AWS Services: Lambda, API Gateway, Cognito, IAM, DynamoDB
+
+Infrastructure: AWS SAM (CloudFormation)
+
+CI/CD: GitHub Actions
+
+⚡ Features
+
+✅ Secure authentication and authorization with Cognito + IAM.
+
+✅ CRUD operations exposed via API Gateway + Lambda.
+
+✅ Data persistence with DynamoDB.
+
+✅ Infrastructure as Code with AWS SAM.
+
+✅ Automated deployment using GitHub Actions.
+
+📂 Project Structure
+aws-serverless-portfolio/
+│── src/                # Lambda functions
+│── infrastructure/     # SAM templates (API Gateway, DynamoDB, Cognito, IAM)
+│── docs/               # Architecture diagrams, documentation
+│── tests/              # Unit tests
+│── .github/workflows/  # CI/CD pipelines
+│── README.md           # Project documentation
+
+🧑‍💻 Getting Started
+Prerequisites
+
+AWS CLI configured with credentials
+
+AWS SAM CLI installed
+
+Node.js >= 18
+
+🧪 Testing
+npm install
+npm test
+
+📈 CI/CD
+
+This project includes a GitHub Actions workflow that:
+
+Runs linting and unit tests.
+
+Builds and packages the SAM template.
+
+Deploys to AWS.
+
+📄 Example workflow:
+
+name: Deploy to AWS
+on:
+  push:
+    branches: [ "main" ]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/setup-sam@v2
+      - run: sam build
+      - run: sam deploy --no-confirm-changeset --stack-name serverless-portfolio
+
+👨‍💻 Author
+
+Manuel Cumplido
+
+🚀 Cloud Developer | AWS Serverless Specialist
+
+🎓 AWS Certified Solutions Architect – Associate | AWS Certified Cloud Practitioner
+
+🌐 LinkedIn
+
+📧 manuelcumplido.9@gmail.com
