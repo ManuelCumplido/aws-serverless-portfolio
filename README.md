@@ -1,37 +1,46 @@
-📦 AWS Serverless Portfolio
+# 📦 AWS Serverless Portfolio
 📌 Overview
 
 This project demonstrates a serverless architecture on AWS, showcasing a secure API built with API Gateway, Lambda, DynamoDB, Cognito, and IAM.
 It was designed as part of my professional portfolio to highlight best practices in serverless development, infrastructure as code (IaC), and CI/CD automation.
 
-🚀 Architecture
+---
 
-Amazon API Gateway (REST) – Entry point for client requests.
+## 🚀 Architecture
 
-Amazon Cognito – User authentication and identity management.
+- Amazon API Gateway (REST) – Entry point for client requests.
+  
+- Amazon Cognito – User authentication and identity management.
 
-AWS IAM Roles & Policies – Fine-grained authorization for Lambda and AWS resources.
+- AWS IAM Roles & Policies – Fine-grained authorization for Lambda and AWS resources.
 
-AWS Lambda – Stateless business logic.
+- AWS Lambda – Stateless business logic.
 
-Amazon DynamoDB – NoSQL storage.
+- Amazon DynamoDB – NoSQL storage.
 
-AWS SAM (IaC) – Infrastructure provisioning and management.
+- AWS SAM (IaC) – Infrastructure provisioning and management.
 
-📊 Diagram:
+---
+
+## 📊 Diagram:
 
 <!-- TODO: add your diagram here -->
-🛠️ Tech Stack
 
-Languages: Node.js (JavaScript)
+---
 
-AWS Services: Lambda, API Gateway, Cognito, IAM, DynamoDB
+## 🛠️ Tech Stack
 
-Infrastructure: AWS SAM (CloudFormation)
+- Languages: Node.js (JavaScript)
 
-CI/CD: GitHub Actions
+- AWS Services: Lambda, API Gateway, Cognito, IAM, DynamoDB
 
-⚡ Features
+- Infrastructure: AWS SAM (CloudFormation)
+
+- CI/CD: GitHub Actions
+
+---
+
+## ⚡ Features
 
 ✅ Secure authentication and authorization with Cognito + IAM.
 
@@ -43,7 +52,10 @@ CI/CD: GitHub Actions
 
 ✅ Automated deployment using GitHub Actions.
 
-📂 Project Structure
+---
+
+## 📂 Project Structure
+```bash
 aws-serverless-portfolio/
 │── src/                # Lambda functions
 │── infrastructure/     # SAM templates (API Gateway, DynamoDB, Cognito, IAM)
@@ -51,32 +63,40 @@ aws-serverless-portfolio/
 │── tests/              # Unit tests
 │── .github/workflows/  # CI/CD pipelines
 │── README.md           # Project documentation
+```
+---
 
-🧑‍💻 Getting Started
+## 🧑‍💻 Getting Started
 Prerequisites
 
-AWS CLI configured with credentials
+- AWS CLI configured with credentials
 
-AWS SAM CLI installed
+- AWS SAM CLI installed
 
-Node.js >= 18
+- Node.js >= 18
 
-🧪 Testing
-npm install
-npm test
+---
 
-📈 CI/CD
+## 🧪 Testing
+- npm install
+- npm test
+
+---
+
+## 📈 CI/CD
 
 This project includes a GitHub Actions workflow that:
 
-Runs linting and unit tests.
+- Runs linting and unit tests.
 
-Builds and packages the SAM template.
+- Builds and packages the SAM template.
 
-Deploys to AWS.
+- Deploys to AWS.
 
-📄 Example workflow:
+---
 
+## 📄 Example workflow:
+```bash
 name: Deploy to AWS
 on:
   push:
@@ -89,15 +109,17 @@ jobs:
       - uses: aws-actions/setup-sam@v2
       - run: sam build
       - run: sam deploy --no-confirm-changeset --stack-name serverless-portfolio
+```
+---
 
-👨‍💻 Author
+## 👨‍💻 Author
 
 Manuel Cumplido
 
-🚀 Cloud Developer | AWS Serverless Specialist
+- 🚀 Cloud Developer | AWS Serverless Specialist
 
-🎓 AWS Certified Solutions Architect – Associate | AWS Certified Cloud Practitioner
+- 🎓 AWS Certified Solutions Architect – Associate | AWS Certified Cloud Practitioner
 
-🌐 LinkedIn
+- 🌐 [LinkedIn](www.linkedin.com/in/manuel-cumplido)  
 
-📧 manuelcumplido.9@gmail.com
+- 📧 manuelcumplido.9@gmail.com
