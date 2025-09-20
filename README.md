@@ -42,6 +42,14 @@ It was designed as part of my professional portfolio to highlight best practices
 
 ---
 
+## 📂 Infrastructure Stacks
+- [IAM Stack](aws-backend/infrastructure/iam/README.md) – Lambda role & DynamoDB policy
+- [DynamoDB Stack](aws-backend/infrastructure/database/README.md) – NoSQL table
+- [Cognito Stack](aws-backend/infrastructure/cognito/README.md) – Authentication & identity
+- [API Gateway Stack](aws-backend/infrastructure/api-gateway-lambdas/README.md) – REST endpoints
+
+---
+
 ## ⚡ Features
 
 ✅ Secure authentication and authorization with Cognito + IAM.
