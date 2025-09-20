@@ -2,7 +2,7 @@
 📌 Overview
 
 This project demonstrates a serverless architecture on AWS, showcasing a secure API built with API Gateway, Lambda, DynamoDB, Cognito, and IAM.
-It was designed as part of my professional portfolio to highlight best practices in serverless development, infrastructure as code (IaC), and CI/CD automation.
+It was designed as part of my professional portfolio to highlight best practices in serverless development, infrastructure as code (IaC) using AWS SAM and AWS CloudFormation, and CI/CD automation.
 
 ---
 
@@ -18,13 +18,15 @@ It was designed as part of my professional portfolio to highlight best practices
 
 - Amazon DynamoDB – NoSQL storage.
 
-- AWS SAM (IaC) – Infrastructure provisioning and management.
+- AWS SAM (IaC) – Infrastructure definition using simplified syntax.
+
+- AWS CloudFormation – Orchestrates and provisions AWS resources from SAM templates.
 
 ---
 
 ## 📊 Diagram:
 
-<!-- TODO: add your diagram here -->
+![Architecture Diagram](aws-backend/docs/architecture.png)
 
 ---
 
