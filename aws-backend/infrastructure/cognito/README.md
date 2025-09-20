@@ -54,5 +54,5 @@ It enables secure user authentication and authorization via a hosted user pool, 
 
 ---
 
-📦 This stack is part of the **[AWS Serverless Portfolio](../../README.md)**.  
+📦 This stack is part of the **[AWS Serverless Portfolio](../../../README.md)**. 
 Check the main README for architecture diagrams, features, and project overview.

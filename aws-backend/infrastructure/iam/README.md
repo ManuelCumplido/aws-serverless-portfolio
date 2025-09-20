@@ -35,5 +35,5 @@ It demonstrates the **principle of least privilege** by granting only the minimu
 
 ---
 
-📦 This stack is part of the **[AWS Serverless Portfolio](../../README.md)**.  
+📦 This stack is part of the **[AWS Serverless Portfolio](../../../README.md)**.  
 Check the main README for architecture diagrams, features, and project overview.

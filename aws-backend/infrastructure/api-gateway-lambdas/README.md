@@ -56,5 +56,5 @@ It also configures **Cognito authentication**, CloudWatch logging, and exports r
 
 ---
 
-📦 This stack is part of the **[AWS Serverless Portfolio](../../README.md)**.  
+📦 This stack is part of the **[AWS Serverless Portfolio](../../../README.md)**. 
 Check the main README for architecture diagrams, features, and project overview.
