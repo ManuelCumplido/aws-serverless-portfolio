@@ -21,10 +21,10 @@ Parameters:
 # Each policy grants only the permissions required for a specific use case
 # This shows how to apply principle of least privilege.   
 Resources:
-  LockerDynamoDBReadWritePolicy:
+  LockerDynamoDBWritePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub "locker-dynamodb-put-policy-${EnvironmentKey}"
+      ManagedPolicyName: !Sub "locker-dynamodb-write-policy-${EnvironmentKey}"
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -34,6 +34,24 @@ Resources:
               #- dynamodb:GetItem
               #- dynamodb:UpdateItem
               #- dynamodb:DeleteItem
+            Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/LockersTable-${EnvironmentKey}"
+
+  LockerDynamoDBReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "locker-dynamodb-read-policy-${EnvironmentKey}"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              #- dynamodb:PutItem
+              #- dynamodb:GetItem
+              #- dynamodb:UpdateItem
+              #- dynamodb:DeleteItem
+              - dynamodb:Scan
+              - dynamodb:DescribeTable
+              - dynamodb:Query
             Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/LockersTable-${EnvironmentKey}"
 
   # Role for CreateLocker Lambda
@@ -50,7 +68,23 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole # Grants Lambda permissions to write logs in CloudWatch
-        - !Ref LockerDynamoDBReadWritePolicy # Custom DynamoDB policy
+        - !Ref LockerDynamoDBWritePolicy # Custom DynamoDB policy
+
+  # Role for ListLockers Lambda
+  ListLockersLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "list-lockers-role-${EnvironmentKey}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole # Grants Lambda permissions to write logs in CloudWatch
+        - !Ref LockerDynamoDBReadPolicy # Custom DynamoDB policy
 
 # Export the Lambda role ARN so it can be imported by the Lambda stack.
 # Using EnvironmentKey ensures unique exports across environments.
@@ -60,3 +94,9 @@ Outputs:
     Value: !GetAtt CreateLockerLambdaRole.Arn
     Export:
       Name: !Sub "CreateLockerLambdaRoleArn-${EnvironmentKey}"
+
+  ListLockersLambdaRoleArn:
+    Description: ARN of the role for ListLockers Lambda
+    Value: !GetAtt ListLockersLambdaRole.Arn
+    Export:
+      Name: !Sub "ListLockersLambdaRoleArn-${EnvironmentKey}"
