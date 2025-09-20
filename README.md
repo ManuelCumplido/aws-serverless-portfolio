@@ -24,7 +24,7 @@ It was designed as part of my professional portfolio to highlight best practices
 
 ## 📊 Diagram:
 
-<!-- TODO: add your diagram here -->
+![Architecture Diagram](aws-backend/docs/architecture.png)
 
 ---
 
