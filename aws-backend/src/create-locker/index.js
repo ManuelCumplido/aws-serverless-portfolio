@@ -1,15 +1,18 @@
-exports.handler = async (event) => {
-  console.log("Event received:", JSON.stringify(event));
+// index.js - Lambda handler for the /lockers POST endpoint
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify(
-      {
-        message: "Hello from create-locker Lambda!",
-        input: event,
-      },
-      null,
-      2
-    ),
-  };
-};
+const service = require('./service');
+
+exports.handler = async (event) => {
+  try {
+    
+    console.log({ event }); // Debuging logs
+    return await service.createLocker(event);
+
+  } catch (error) {
+    console.log("Error: ", error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({message: "Internal Server Error"})
+    };
+  }
+}

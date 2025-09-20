@@ -117,10 +117,9 @@ Resources:
           Fn::Sub: "CreateLockerLambdaRoleArn-${EnvironmentKey}"
       Environment:
         Variables:
-          TABLE_NAME: 
+          LOCKERS_TABLE: 
             Fn::ImportValue:
               Fn::Sub: "LockersTableName-${EnvironmentKey}" # DynamoDB table (dynamic per environment)
-          REGION: !Ref "AWS::Region" # AWS region where this Lambda is deployed
       Events:
         ApiEvent:
           Type: Api
