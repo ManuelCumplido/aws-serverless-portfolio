@@ -6,6 +6,14 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: "AWS::Serverless-2016-10-31"
 Description: SAM Template for SmartLocker REST API Gateway (demo project)
 
+Globals:
+  Function:
+    Runtime: nodejs20.x       # Default runtime for all Lambda functions (Node.js 20)
+    Handler: index.handler    # Standard entry point (index.js with "exports.handler")
+    MemorySize: 128           # Default memory allocation in MB (lightweight baseline)
+    Timeout: 3                # Maximum execution time in seconds (prevents long-running tasks)
+    Tracing: Active           # Enables AWS X-Ray tracing for all Lambda functions
+
 # EnvironmentKey parameter allows multi-environment deployments.
 # Avoids hardcoding "dev/prod" and simplifies CI/CD pipelines.
 Parameters:
@@ -108,10 +116,6 @@ Resources:
       FunctionName: !Sub "create-locker-${EnvironmentKey}" # Function name with environment suffix
       CodeUri: ../../src/create-locker/ # Source code location for the Lambda
       Description: Handles POST /lockers to create new locker entries in database
-      Handler: index.handler
-      Runtime: nodejs20.x
-      MemorySize: 128
-      Timeout: 3 # Explicit timeout (default is 3s). Defines max execution time
       Role: 
         Fn::ImportValue: 
           Fn::Sub: "CreateLockerLambdaRoleArn-${EnvironmentKey}"
@@ -135,4 +139,35 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /aws/lambda/${CreateLockerLambda}
+      RetentionInDays: 14
+
+  ListLockersLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "list-lockers-${EnvironmentKey}" # Function name with environment suffix
+      CodeUri: ../../src/list-lockers/ # Source code location for the Lambda
+      Description: Handles GET /lockers to list all lockers
+      Role: 
+        Fn::ImportValue: 
+          Fn::Sub: "ListLockersLambdaRoleArn-${EnvironmentKey}"
+      Environment:
+        Variables:
+          LOCKERS_TABLE: 
+            Fn::ImportValue:
+              Fn::Sub: "LockersTableName-${EnvironmentKey}" # DynamoDB table (dynamic per environment)
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SmartLockerApiGateway
+            Path: /lockers
+            Method: GET # Exposes this Lambda through API Gateway (POST /lockers)
+
+  # Explicit log group for Lambda
+  # - Retention is set to 14 days to reduce costs and avoid keeping unnecessary logs.
+  # - Without this, CloudWatch would create the log group automatically with no retention policy (infinite storage)
+  ListLockersLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ListLockersLambda}
       RetentionInDays: 14
