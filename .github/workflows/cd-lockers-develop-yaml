@@ -1,0 +1,56 @@
+name: CD - SmartLockers - Develop
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches: [develop]
+    types: [opened, reopened, synchronize]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        # This action clones the repository into the GitHub Actions runner.
+        # Without this step, the workflow would not have access to your code (no package.json, no infrastructure/ folder, etc.).
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha}}
+
+      # Setup AWS SAM CLI (recommended instead of pip)
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          version: 1.* # Always install the latest stable available release in the 1.x series.
+
+      - name: Configure AWS credentials (OIDC)
+        # This action configures temporary AWS credentials for the job
+        # using GitHub's OpenID Connect (OIDC) provider and the specified IAM role.
+        # No static AWS keys are required (more secure).
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::813858483616:role/OIDC-GitHubActions-Role
+          aws-region: us-east-1
+
+      # Detect which SAM templates were modified compared to main branch
+      - name: Detect changed templates
+        id: changes
+        run: |
+          git fetch origin main
+          git diff --name-only origin/main...HEAD | grep 'infrastructure/.*\.yaml' || true
+
+      # Deploy only the stacks whose templates were modified
+      - name: Deploy stacks
+        if: steps.changes.outputs != ''
+        working-directory: aws-backend
+        run: |
+          for template in $(git diff --name-only origin/main...HEAD | grep 'infrastructure/.*\.yaml'); do
+            echo "Deploying $template"
+            sam deploy --template-file $template \
+              --stack-name smartlockers-${template##*/} \
+              --no-confirm-changeset \
+              --capabilities CAPABILITY_IAM
+          done
