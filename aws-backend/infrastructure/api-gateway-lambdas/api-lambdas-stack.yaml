@@ -191,22 +191,22 @@ Resources:
       LogGroupName: !Sub /aws/lambda/${ListLockersLambda}
       RetentionInDays: 14
 
-  # Permission for API Gateway to invoke the CreateLocker Lambda
-  # and the ListLockers Lambda
-  # - Required so API Gateway can call these Lambdas when clients hit any method/path
-  # - Using /*/*/* avoids the AccessDenied issue caused by restrictive ARNs
-  CreateLockerLambdaInvokePermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref CreateLockerLambda
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SmartLockerApiGateway}/*/*/*
-
-  ListLockersLambdaInvokePermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref ListLockersLambda
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SmartLockerApiGateway}/*/*/*
+  ## Permission for API Gateway to invoke the CreateLocker Lambda
+  ## and the ListLockers Lambda
+  ## - Required so API Gateway can call these Lambdas when clients hit any method/path
+  ## - Using /*/*/* avoids the AccessDenied issue caused by restrictive ARNs
+  #CreateLockerLambdaInvokePermission:
+  #  Type: AWS::Lambda::Permission
+  #  Properties:
+  #    Action: lambda:InvokeFunction
+  #    FunctionName: !Ref CreateLockerLambda
+  #    Principal: apigateway.amazonaws.com
+  #    SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SmartLockerApiGateway}/*/*/*
+#
+  #ListLockersLambdaInvokePermission:
+  #  Type: AWS::Lambda::Permission
+  #  Properties:
+  #    Action: lambda:InvokeFunction
+  #    FunctionName: !Ref ListLockersLambda
+  #    Principal: apigateway.amazonaws.com
+  #    SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SmartLockerApiGateway}/*/*/*
