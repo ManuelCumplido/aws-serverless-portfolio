@@ -113,8 +113,3 @@ jobs:
       - name: Deploy API stack
         working-directory: aws-backend/infrastructure/api-gateway-lambdas
         run: sam deploy --config-file samconfig-dev.toml --config-env api-dev --no-confirm-changeset --no-fail-on-empty-changeset
-
-      # Deploy API Gateway stack (OAS3 definition)
-      - name: Deploy API OAS3 stack
-        working-directory: aws-backend/infrastructure/api-gateway-lambdas
-        run: sam deploy --config-file samconfig-dev.toml --config-env api-oas30-dev --no-confirm-changeset --no-fail-on-empty-changeset

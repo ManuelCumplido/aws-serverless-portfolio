@@ -8,11 +8,3 @@ region = "us-east-1"
 s3_bucket = "lockers-infra-artifacts-dev"
 parameter_overrides = "EnvironmentKey=dev SmartLockersUserPool=us-east-1_Of6C50lJc"
 capabilities = "CAPABILITY_NAMED_IAM"
-
-[api-oas30-dev.deploy.parameters]
-stack_name = "lockers-api-oas-dev"
-template_file = "openapi/smartlocker-apis-oas30.yaml"
-confirm_changeset = true
-region = "us-east-1"
-s3_bucket = "lockers-infra-artifacts-dev"
-capabilities = "CAPABILITY_NAMED_IAM"
