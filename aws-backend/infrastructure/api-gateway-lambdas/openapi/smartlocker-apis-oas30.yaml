@@ -29,8 +29,7 @@ paths:
         type: aws_proxy
         httpMethod: POST
         uri: !Sub >
-          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-          arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:create-locker-${EnvironmentKey}/invocations
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:create-locker-${EnvironmentKey}/invocations
         responses:
           default:
             statusCode: "200"
@@ -44,8 +43,7 @@ paths:
           type: aws_proxy
           httpMethod: GET
           uri: !Sub >
-            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/
-            arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:list-lockers-${EnvironmentKey}/invocations
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:list-lockers-${EnvironmentKey}/invocations
           responses:
             default:
               statusCode: "200"
