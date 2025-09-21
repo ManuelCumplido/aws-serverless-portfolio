@@ -74,7 +74,7 @@ Resources:
                   description: "200 response"
               x-amazon-apigateway-integration:
                 type: aws_proxy
-                httpMethod: POST
+                httpMethod: POST # API Gateway always invokes Lambda with POST regardless of the client method.
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:create-locker-${EnvironmentKey}/invocations
                 responses:
                   default:
@@ -88,7 +88,7 @@ Resources:
                   description: "200 response"
               x-amazon-apigateway-integration:
                 type: aws_proxy
-                httpMethod: POST
+                httpMethod: POST # API Gateway always invokes Lambda with POST regardless of the client method.
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:list-lockers-${EnvironmentKey}/invocations
                 responses:
                   default:
@@ -180,7 +180,7 @@ Resources:
           Properties:
             RestApiId: !Ref SmartLockerApiGateway
             Path: /lockers
-            Method: GET # Exposes this Lambda through API Gateway (POST /lockers)
+            Method: GET # Exposes this Lambda through API Gateway (GET /lockers)
 
   # Explicit log group for Lambda
   # - Retention is set to 14 days to reduce costs and avoid keeping unnecessary logs.

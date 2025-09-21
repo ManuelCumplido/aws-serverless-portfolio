@@ -28,6 +28,5 @@ async function listLockers(event) {
 }
 
 module.exports = {
-  createLocker,
   listLockers,
 };
