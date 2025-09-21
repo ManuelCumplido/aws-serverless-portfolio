@@ -42,6 +42,13 @@ Resources:
       Variables:
         EnvironmentKey: !Ref EnvironmentKey # Stage variable accessible inside API Gateway
 
+      MethodSettings:
+        - LoggingLevel: INFO          # Enables execution logging at INFO level (can be INFO or ERROR).
+          DataTraceEnabled: true      # Logs full request/response payloads (be careful with sensitive data).
+          MetricsEnabled: true        # Publishes detailed API Gateway metrics to CloudWatch.
+          ResourcePath: "/*"          # Applies these settings to all resources (endpoints) in the API.
+          HttpMethod: "*"             # Applies these settings to all HTTP methods (GET, POST, etc.).
+
       DefinitionBody:
         openapi: "3.0.3"
         info:
