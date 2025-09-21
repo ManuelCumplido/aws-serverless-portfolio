@@ -41,19 +41,19 @@ jobs:
       # Deploy IAM stack (using the iam-dev section from samconfig-dev.toml)
       - name: Deploy IAM stack
         working-directory: aws-backend
-        run: sam deploy --config-file samconfig-dev.toml --config-env iam-dev --no-confirm-changeset
+        run: sam deploy --config-file samconfig-dev.toml --config-env iam-dev --no-confirm-changeset --no-fail-on-empty-changeset
 
       # Deploy DynamoDB stack (using the dynamodb-dev section from samconfig-dev.toml)
       - name: Deploy DynamoDB stack
         working-directory: aws-backend
-        run: sam deploy --config-file samconfig-dev.toml --config-env dynamodb-dev --no-confirm-changeset
+        run: sam deploy --config-file samconfig-dev.toml --config-env dynamodb-dev --no-confirm-changeset --no-fail-on-empty-changeset
 
       # Deploy Cognito stack (using the cognito-dev section from samconfig-dev.toml)
       - name: Deploy Cognito stack
         working-directory: aws-backend
-        run: sam deploy --config-file samconfig-dev.toml --config-env cognito-dev --no-confirm-changeset
+        run: sam deploy --config-file samconfig-dev.toml --config-env cognito-dev --no-confirm-changeset --no-fail-on-empty-changeset
 
       # Deploy API Gateway + Lambdas stack (separate config file inside api-gateway-lambdas folder)
       - name: Deploy API stack
         working-directory: aws-backend/infrastructure/api-gateway-lambdas
-        run: sam deploy --config-file samconfig-dev.toml --config-env api-dev --no-confirm-changeset
+        run: sam deploy --config-file samconfig-dev.toml --config-env api-dev --no-confirm-changeset --no-fail-on-empty-changeset
