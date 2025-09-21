@@ -190,3 +190,25 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/lambda/${ListLockersLambda}
       RetentionInDays: 14
+
+  # Permission for API Gateway to invoke the CreateLocker Lambda
+  # - Required so API Gateway can call this Lambda when clients hit POST /lockers
+  # - Restricts invocation to requests from API Gateway only, for this specific path/method
+  CreateLockerLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref CreateLockerLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SmartLockerApiGateway}/*/POST/lockers
+
+  # Permission for API Gateway to invoke the ListLockers Lambda
+  # - Required so API Gateway can call this Lambda when clients hit GET /lockers
+  # - Restricts invocation to requests from API Gateway only, for this specific path/method
+  ListLockersLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ListLockersLambda
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SmartLockerApiGateway}/*/GET/lockers
