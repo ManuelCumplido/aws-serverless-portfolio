@@ -35,22 +35,22 @@ jobs:
           role-to-assume: arn:aws:iam::813858483616:role/OIDC-GitHubActions-Role
           aws-region: us-east-1
 
-      # Detect which SAM templates were modified compared to main branch
-      - name: Detect changed templates
-        id: changes
-        run: |
-          git fetch origin main
-          git diff --name-only origin/main...HEAD | grep 'infrastructure/.*\.yaml' || true
-
-      # Deploy only the stacks whose templates were modified
-      - name: Deploy stacks
-        if: steps.changes.outputs != ''
+      # Deploy IAM stack (using the iam-dev section from samconfig-dev.toml)
+      - name: Deploy IAM stack
         working-directory: aws-backend
-        run: |
-          for template in $(git diff --name-only origin/main...HEAD | grep 'infrastructure/.*\.yaml'); do
-            echo "Deploying $template"
-            sam deploy --template-file $template \
-              --stack-name smartlockers-${template##*/} \
-              --no-confirm-changeset \
-              --capabilities CAPABILITY_IAM
-          done
+        run: sam deploy --config-file samconfig-dev.toml --config-env iam-dev --no-confirm-changeset
+
+      # Deploy DynamoDB stack (using the dynamodb-dev section from samconfig-dev.toml)
+      - name: Deploy DynamoDB stack
+        working-directory: aws-backend
+        run: sam deploy --config-file samconfig-dev.toml --config-env dynamodb-dev --no-confirm-changeset
+
+      # Deploy Cognito stack (using the cognito-dev section from samconfig-dev.toml)
+      - name: Deploy Cognito stack
+        working-directory: aws-backend
+        run: sam deploy --config-file samconfig-dev.toml --config-env cognito-dev --no-confirm-changeset
+
+      # Deploy API Gateway + Lambdas stack (separate config file inside api-gateway-lambdas folder)
+      - name: Deploy API stack
+        working-directory: aws-backend/infrastructure/api-gateway-lambdas
+        run: sam deploy --config-file samconfig-dev.toml --config-env api-dev --no-confirm-changeset
