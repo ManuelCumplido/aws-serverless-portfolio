@@ -12,7 +12,24 @@ async function updateLocker(event) {
     try {
         const body = JSON.parse(event.body);
         const lockerId = event.pathParameters.id;
-        const ownerId = event.requestContext.authorizer.claims.sub;
+        const ownerIdBody = event.requestContext.authorizer.claims.sub;
+
+        const getLockerParams = {
+            TableName: process.env.LOCKERS_TABLE,
+            Key: {
+                lockerId: lockerId,
+            },
+        };
+
+        const { Item: locker } = await dynamoDb.getItem(getLockerParams);
+        const ownerIdDB = locker.ownerId;
+
+        if (ownerIdBody !== ownerIdDB) {
+            return {
+                statusCode: 403,
+                body: JSON.stringify({ message: "You are not the owner of this locker" }),
+            };
+        }
         
 
         const updateLockerParams = {

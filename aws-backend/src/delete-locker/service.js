@@ -23,7 +23,6 @@ async function deleteLocker(event) {
 
         const { Item: locker } = await dynamoDb.getItem(getLockerParams);
         const ownerIdDB = locker.ownerId;
-        console.log({ownerId});
 
         if (ownerIdBody !== ownerIdDB) {
             return {

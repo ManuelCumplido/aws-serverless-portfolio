@@ -11,25 +11,34 @@ const dynamoDb = require('./dynamoDB');
 async function getLocker(event) {
     try {
         const lockerId = event.pathParameters.id;
-        const ownerId = event.requestContext.authorizer.claims.sub;
+        const ownerIdBody = event.requestContext.authorizer.claims.sub;
 
         const getLockerParams = {
             TableName: process.env.LOCKERS_TABLE,
             Key: { lockerId },
         };
 
-        const result = await dynamoDb.getItem(getLockerParams);
+        const { Item: locker } = await dynamoDb.getItem(getLockerParams);
 
-        if (!result.Item) {
+        if (!locker) {
             return {
                 statusCode: 404,
                 body: JSON.stringify({ message: "Locker not found" }),
             };
         }
 
+        const ownerIdDB = locker.ownerId;
+
+        if (ownerIdBody !== ownerIdDB) {
+            return {
+                statusCode: 403,
+                body: JSON.stringify({ message: "You are not the owner of this locker" }),
+            };
+        }
+
         return {
             statusCode: 200,
-            body: JSON.stringify(result.Item),
+            body: JSON.stringify(locker),
         };
     } catch (error) {
         throw error; // unexpected errors handled in index.js
