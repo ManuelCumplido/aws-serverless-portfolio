@@ -11,9 +11,26 @@ const dynamoDb = require('./dynamoDB');
 async function deleteLocker(event) {
     try {
 
-        const body = JSON.parse(event.body);
         const lockerId = event.pathParameters.id
-        const ownerId = event.requestContext.authorizer.claims.sub;
+        const ownerIdBody = event.requestContext.authorizer.claims.sub;
+
+        const getLockerParams = {
+            TableName: process.env.LOCKERS_TABLE,
+            Key: {
+                lockerId: lockerId,
+            },
+        };
+
+        const { Item: locker } = await dynamoDb.getItem(getLockerParams);
+        const ownerIdDB = locker.ownerId;
+        console.log({ownerId});
+
+        if (ownerIdBody !== ownerIdDB) {
+            return {
+                statusCode: 403,
+                body: JSON.stringify({ message: "You are not the owner of this locker" }),
+            };
+        }
 
         const deleteLockerParams = {
             TableName: process.env.LOCKERS_TABLE,
@@ -30,7 +47,7 @@ async function deleteLocker(event) {
             statusCode: 201,
             body: JSON.stringify({
                 message: "Locker deleted successfully",
-                locker: newLockerItem
+                locker: lockerId
             }),
         }
 
