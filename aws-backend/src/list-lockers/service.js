@@ -19,11 +19,7 @@ async function listLockers(event) {
       body: JSON.stringify({ lockers }),
     };
   } catch (error) {
-    console.error("Error in listLockers:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: "Internal Server Error" }),
-    };
+    throw error; // unexpected errors handled in index.js
   }
 }
 

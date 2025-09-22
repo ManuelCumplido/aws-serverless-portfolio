@@ -51,7 +51,7 @@ async function createLocker(event) {
             body: JSON.stringify({ message: "Locker already exists" }),
           };
         }
-        throw error;
+        throw error; // unexpected errors handled in index.js
       }
 }
 
