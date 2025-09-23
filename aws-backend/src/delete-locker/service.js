@@ -22,6 +22,14 @@ async function deleteLocker(event) {
         };
 
         const { Item: locker } = await dynamoDb.getItem(getLockerParams);
+
+        if (!locker) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: "Locker not found" }),
+            };
+        }
+
         const ownerIdDB = locker.ownerId;
 
         if (ownerIdBody !== ownerIdDB) {
