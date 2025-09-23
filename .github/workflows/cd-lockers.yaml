@@ -1,10 +1,10 @@
-name: CI - SmartLockers
+name: CD - SmartLockers
 
 on:
   push:
-    branches: [develop]
+    branches: [main]
   pull_request:
-    branches: [develop]
+    branches: [main]
     types: [opened, reopened, synchronize]
 
 jobs:
@@ -94,22 +94,22 @@ jobs:
           role-to-assume: arn:aws:iam::813858483616:role/OIDC-GitHubActions-Role
           aws-region: us-east-1
 
-      # Deploy IAM stack (using the iam-dev section from samconfig-dev.toml)
+      # Deploy IAM stack (using the iam-prod section from samconfig-prod.toml)
       - name: Deploy IAM stack
         working-directory: aws-backend
-        run: sam deploy --config-file samconfig-dev.toml --config-env iam-dev --no-confirm-changeset --no-fail-on-empty-changeset
+        run: sam deploy --config-file samconfig-prod.toml --config-env iam-prod --no-confirm-changeset --no-fail-on-empty-changeset
 
-      # Deploy DynamoDB stack (using the dynamodb-dev section from samconfig-dev.toml)
+      # Deploy DynamoDB stack (using the dynamodb-prod section from samconfig-prod.toml)
       - name: Deploy DynamoDB stack
         working-directory: aws-backend
-        run: sam deploy --config-file samconfig-dev.toml --config-env dynamodb-dev --no-confirm-changeset --no-fail-on-empty-changeset
+        run: sam deploy --config-file samconfig-prod.toml --config-env dynamodb-prod --no-confirm-changeset --no-fail-on-empty-changeset
 
-      # Deploy Cognito stack (using the cognito-dev section from samconfig-dev.toml)
+      # Deploy Cognito stack (using the cognito-prod section from samconfig-prod.toml)
       - name: Deploy Cognito stack
         working-directory: aws-backend
-        run: sam deploy --config-file samconfig-dev.toml --config-env cognito-dev --no-confirm-changeset --no-fail-on-empty-changeset
+        run: sam deploy --config-file samconfig-prod.toml --config-env cognito-prod--no-confirm-changeset --no-fail-on-empty-changeset
 
       # Deploy API Gateway + Lambdas stack (separate config file inside api-gateway-lambdas folder)
       - name: Deploy API stack
         working-directory: aws-backend/infrastructure/api-gateway-lambdas
-        run: sam deploy --config-file samconfig-dev.toml --config-env api-dev --no-confirm-changeset --no-fail-on-empty-changeset
+        run: sam deploy --config-file samconfig-prod.toml --config-env api-prod --no-confirm-changeset --no-fail-on-empty-changeset

@@ -6,7 +6,7 @@ exports.handler = async (event) => {
   try {
     
     console.log({ event }); // Debuging logs
-    return await service.createLocker(event);
+    return await service.listLockers(event);
 
   } catch (error) {
     console.log("Error: ", error);
