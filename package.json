@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "jest": "^30.1.3"
+  },
+  "scripts": {
+    "test": "jest --coverage",
+    "test:unit": "jest --testMatch \"**/aws-backend/src/**/__tests__/**/*.js\"",
+    "test:integration": "jest aws-backend/integration-tests"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.894.0",
+    "@aws-sdk/lib-dynamodb": "^3.894.0"
+  }
+}
