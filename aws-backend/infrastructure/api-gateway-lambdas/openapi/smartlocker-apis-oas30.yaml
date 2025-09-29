@@ -20,7 +20,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
+              $ref: "#/components/schemas/CreateLockerRequest"
         required: true
       responses:
         "200":
@@ -41,7 +41,7 @@ paths:
             description: "200 response"
         x-amazon-apigateway-integration:
           type: aws_proxy
-          httpMethod: GET
+          httpMethod: POST
           uri: !Sub >
             arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:list-lockers-${EnvironmentKey}/invocations
           responses:
@@ -81,7 +81,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
+              $ref: "#/components/schemas/UpdateLockerRequest"
       responses:
         "200":
           description: "Locker updated"
@@ -118,6 +118,42 @@ paths:
             statusCode: "204"
 
 components:
+  schemas:
+    # Model definition for CreateLocker requests
+    # This enforces that every POST /lockers request body must follow this schema
+    CreateLockerRequest:
+      type: object
+      properties:
+        lockerId:
+          type: string
+          pattern: "^[a-zA-Z0-9_-]+$"
+          minLength: 3
+          maxLength: 36
+        location:
+          type: string
+          minLength: 3
+          maxLength: 100
+        status:
+          type: string
+          enum: ["active", "inactive"]
+      required: ["lockerId", "location", "status"]
+      additionalProperties: false
+
+    # Model definition for UpdateLocker requests
+    # This enforces that every PUT /lockers/{id} request body must follow this schema
+    UpdateLockerRequest:
+      type: object
+      properties:
+        location:
+          type: string
+          minLength: 3
+          maxLength: 100
+        status:
+          type: string
+          enum: ["active", "inactive"]
+      additionalProperties: false
+      minProperties: 1
+
   securitySchemes:
     CognitoAuthorizer:
       type: apiKey
