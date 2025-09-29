@@ -1,5 +1,26 @@
+# Cognito Stack: User Pool, App Client, Domain and Groups for SmartLocker project
+# This template provisions authentication and authorization resources
+# including:
+# - Cognito User Pool with password policy
+# - Cognito App Client for web/mobile apps
+# - Cognito Hosted UI Domain (unique per environment)
+# - Cognito User Groups (admins, users)
+# Exports the UserPoolId, UserPoolClientId, and Domain for cross-stack references
+
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Cognito SmartLockers User Pool, Client, Domain and Groups"
+
+
+# EnvironmentKey: allows multi-environment deployments (dev, staging, prod).
+# Avoids hardcoding environment names and ensures unique resource naming.
+Parameters:
+  EnvironmentKey:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - production
 
 Resources:
   # Main User Pool for SmartLockers authentication
@@ -70,18 +91,18 @@ Outputs:
     Description: ID of the Cognito User Pool
     Value: !Ref SmartLockersUserPool
     Export:
-      Name: SmartLockersUserPoolId
+      Name: !Sub SmartLockersUserPoolId-${EnvironmentKey}
 
   # Exported User Pool Client ID to be used in other stacks
   UserPoolClientId:
     Description: ID of the Cognito User Pool Client
     Value: !Ref SmartLockersUserPoolClient
     Export:
-      Name: SmartLockersUserPoolClientId
+      Name: !Sub SmartLockersUserPoolClientId-${EnvironmentKey}
 
   # Exported Cognito Hosted UI domain for testing authentication
   CognitoDomain:
     Description: Cognito Hosted UI domain
     Value: !Sub "https://${SmartLockersUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com"
     Export:
-      Name: SmartLockersCognitoDomain
+      Name: !Sub SmartLockersCognitoDomain-${EnvironmentKey}
