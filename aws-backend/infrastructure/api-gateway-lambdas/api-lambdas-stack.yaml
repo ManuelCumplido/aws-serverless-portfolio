@@ -216,6 +216,67 @@ Resources:
                 Action: "*"
                 Resource: "*"
 
+  # Model definition for CreateLocker requests
+  # This enforces that every POST /lockers request body must follow this schema
+  # - Requires lockerId, location, and status
+  # - lockerId: alphanumeric string with length between 3–36
+  # - location: string with length between 3–100
+  # - status: must be either "active" or "inactive"
+  # - Rejects any additional/unexpected properties
+  CreateLockerModel:
+    Type: AWS::ApiGateway::Model
+    Properties:
+      RestApiId: !Ref SmartLockerApiGateway
+      ContentType: application/json
+      Name: CreateLockerModel
+      Schema:
+        $schema: "http://json-schema.org/draft-04/schema#"
+        title: "CreateLockerRequest"
+        type: "object"
+        properties:
+          lockerId:
+            type: "string"
+            pattern: "^[a-zA-Z0-9_-]+$"
+            minLength: 3
+            maxLength: 36
+          location:
+            type: "string"
+            minLength: 3
+            maxLength: 100
+          status:
+            type: "string"
+            enum: ["active", "inactive"]
+        required: ["lockerId", "location", "status"]
+        additionalProperties: false
+
+  # Model definition for UpdateLocker requests
+  # This enforces that every PUT /lockers/{id} request body must follow this schema
+  # - Allows updating only location and/or status
+  # - location: string with length between 3–100
+  # - status: must be either "active" or "inactive"
+  # - Rejects any additional/unexpected properties
+  # - At least one property must be present (minProperties: 1)
+  UpdateLockerModel:
+    Type: AWS::ApiGateway::Model
+    Properties:
+      RestApiId: !Ref SmartLockerApiGateway
+      ContentType: application/json
+      Name: UpdateLockerModel
+      Schema:
+        $schema: "http://json-schema.org/draft-04/schema#"
+        title: "UpdateLockerRequest"
+        type: "object"
+        properties:
+          location:
+            type: "string"
+            minLength: 3
+            maxLength: 100
+          status:
+            type: "string"
+            enum: ["active", "inactive"]
+        additionalProperties: false
+        minProperties: 1
+
   ###
   CreateLockerLambda:
     Type: AWS::Serverless::Function
@@ -238,6 +299,11 @@ Resources:
             RestApiId: !Ref SmartLockerApiGateway
             Path: /lockers
             Method: POST # Exposes this Lambda through API Gateway (POST /lockers)
+            RequestModel:
+              Model: !Ref CreateLockerModel  # Enforces schema validation for request body against CreateLockerModel
+              Required: true                 # Ensures a request body must always be present (rejects empty bodies)
+              ContentType: application/json  # Validates that requests use JSON format (rejects other content types)
+
 
   # Explicit log group for Lambda
   # - Retention is set to 14 days to reduce costs and avoid keeping unnecessary logs.
@@ -331,6 +397,10 @@ Resources:
             RestApiId: !Ref SmartLockerApiGateway
             Path: /lockers/{id}
             Method: PUT
+            RequestModel:
+              Model: !Ref UpdateLockerModel  # Enforces schema validation for request body against UpdateLockerModel
+              Required: true                 # Ensures a request body must always be present (rejects empty bodies)
+              ContentType: application/json  # Validates that requests use JSON format (rejects other content types)
 
   UpdateLockerLambdaLogGroup:
     Type: AWS::Logs::LogGroup
