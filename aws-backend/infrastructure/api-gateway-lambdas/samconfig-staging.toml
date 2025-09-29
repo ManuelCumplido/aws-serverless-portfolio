@@ -1,0 +1,10 @@
+version = 0.1
+
+[api-staging.deploy.parameters]
+stack_name = "lockers-api-staging"
+template_file = "api-lambdas-stack.yaml"
+confirm_changeset = true
+region = "us-east-1"
+s3_bucket = "lockers-infra-artifacts-staging"
+parameter_overrides = "EnvironmentKey=staging SmartLockersUserPool=us-east-1_Of6C50lJcM"
+capabilities = "CAPABILITY_NAMED_IAM"

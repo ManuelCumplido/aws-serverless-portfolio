@@ -1,115 +1,48 @@
-name: CD - SmartLockers
+name: CI - SmartLockers
 
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
-    types: [opened, reopened, synchronize]
 
 jobs:
-  validate:
+  cd-staging:
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repo
-        # This action clones the repository into the GitHub Actions runner.
-        # Without this step, the workflow would not have access to your code (no package.json, no infrastructure/ folder, etc.).
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha}}
-
-      # Setup Node.js runtime (used for AWS Lambda functions in this project)
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      # Cache npm dependencies to speed up builds
-      # The cache is stored based on the OS + a hash of package-lock.json
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            # Fallback in case the exact key is not found
-            ${{ runner.os }}-node-
-
-      # Install project dependencies from package.json - Commented for future dependencies
-      #- name: Install dependencies
-      #   run: npm install
-
-      # Run ESLint to check code style and detect errors in JavaScript files - Commented for future dependencies
-      #- name: Run ESLint
-      #  run: npx eslint . --ext .js,.mjs,.cjs
-
-      # Run unit tests (with coverage report enabled) - Commented for future dependencies
-      #- name: Run tests
-      #  run: npm test -- --coverage
-
-      # Setup AWS SAM CLI (recommended instead of pip)
-      - name: Setup AWS SAM CLI
-        uses: aws-actions/setup-sam@v2
-        with:
-          version: 1.* # "version: 1.*" means: always install the latest stable available release in the 1.x series.
-
-      # Validate AWS SAM templates (CloudFormation IaC files)
-      - name: Validate all SAM templates
-        working-directory: aws-backend
-        run: |
-          sam validate --lint --template-file infrastructure/api-gateway-lambdas/api-lambdas-stack.yaml
-          sam validate --lint --template-file infrastructure/cognito/cognito-lockers-stack.yaml
-          sam validate --lint --template-file infrastructure/database/dynamodb-lockers-stack.yaml
-          sam validate --lint --template-file infrastructure/iam/iam-lockers-stack.yaml
-  
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: validate   # ensures deploy runs only if validation passes
+    environment: staging
     permissions:
-      id-token: write   # Required for OIDC federation
-      contents: read    # Required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout repo
-        # This action clones the repository into the GitHub Actions runner.
-        # Without this step, the workflow would not have access to your code (no package.json, no infrastructure/ folder, etc.).
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha}}
 
-      # Setup AWS SAM CLI (recommended instead of pip)
       - name: Setup AWS SAM CLI
         uses: aws-actions/setup-sam@v2
         with:
-          version: 1.* # Always install the latest stable available release in the 1.x series.
+          version: 1.*
 
       - name: Configure AWS credentials (OIDC)
-        # This action configures temporary AWS credentials for the job
-        # using GitHub's OpenID Connect (OIDC) provider and the specified IAM role.
-        # No static AWS keys are required (more secure).
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::813858483616:role/OIDC-GitHubActions-Role
           aws-region: us-east-1
 
-      # Deploy IAM stack (using the iam-prod section from samconfig-prod.toml)
+      # Deploy IAM stack
       - name: Deploy IAM stack
         working-directory: aws-backend
-        run: sam deploy --config-file samconfig-prod.toml --config-env iam-prod --no-confirm-changeset --no-fail-on-empty-changeset
+        run: sam deploy --config-file samconfig-staging.toml --config-env iam-staging --no-confirm-changeset --no-fail-on-empty-changeset
 
-      # Deploy DynamoDB stack (using the dynamodb-prod section from samconfig-prod.toml)
+      # Deploy DynamoDB stack
       - name: Deploy DynamoDB stack
         working-directory: aws-backend
-        run: sam deploy --config-file samconfig-prod.toml --config-env dynamodb-prod --no-confirm-changeset --no-fail-on-empty-changeset
+        run: sam deploy --config-file samconfig-staging.toml --config-env dynamodb-staging --no-confirm-changeset --no-fail-on-empty-changeset
 
-      # Deploy Cognito stack (using the cognito-prod section from samconfig-prod.toml)
+      # Deploy Cognito stack
       - name: Deploy Cognito stack
         working-directory: aws-backend
-        run: sam deploy --config-file samconfig-prod.toml --config-env cognito-prod--no-confirm-changeset --no-fail-on-empty-changeset
+        run: sam deploy --config-file samconfig-staging.toml --config-env cognito-staging --no-confirm-changeset --no-fail-on-empty-changeset
 
-      # Deploy API Gateway + Lambdas stack (separate config file inside api-gateway-lambdas folder)
+      # Deploy API Gateway + Lambdas stack
       - name: Deploy API stack
         working-directory: aws-backend/infrastructure/api-gateway-lambdas
-        run: sam deploy --config-file samconfig-prod.toml --config-env api-prod --no-confirm-changeset --no-fail-on-empty-changeset
+        run: sam deploy --config-file samconfig-staging.toml --config-env api-staging --no-confirm-changeset --no-fail-on-empty-changeset

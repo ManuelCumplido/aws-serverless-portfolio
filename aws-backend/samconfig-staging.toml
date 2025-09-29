@@ -1,0 +1,26 @@
+version = 0.1
+
+[iam-staging.deploy.parameters]
+stack_name = "lockers-iam-staging"
+template_file = "infrastructure/iam/iam-lockers-stack.yaml"
+region = "us-east-1"
+s3_bucket = "lockers-infra-artifacts-staging"
+capabilities = "CAPABILITY_NAMED_IAM"
+parameter_overrides = "EnvironmentKey=\"staging\""
+confirm_changeset = true
+
+[dynamodb-staging.deploy.parameters]
+stack_name = "lockers-dynamodb-staging"
+template_file = "infrastructure/database/dynamodb-lockers-stack.yaml"
+region = "us-east-1"
+s3_bucket = "lockers-infra-artifacts-staging"
+parameter_overrides = "EnvironmentKey=\"staging\""
+confirm_changeset = true
+
+[cognito-staging.deploy.parameters]
+stack_name = "lockers-cognito-staging"
+template_file = "infrastructure/cognito/cognito-lockers-stack.yaml"
+region = "us-east-1"
+s3_bucket = "lockers-infra-artifacts-staging"
+parameter_overrides = "EnvironmentKey=\"staging\""
+confirm_changeset = true
