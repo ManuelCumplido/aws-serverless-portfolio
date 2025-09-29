@@ -26,7 +26,7 @@ Resources:
   SmartLockersUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: smartlockers-userpool-${EnvironmentKey}
+      UserPoolName: !Sub smartlockers-userpool-${EnvironmentKey}
       AutoVerifiedAttributes: # Automatically verify user emails/phone numbers
         - email
         # - phone_number
@@ -43,7 +43,7 @@ Resources:
   SmartLockersUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      ClientName: smartlockers-client-${EnvironmentKey}
+      ClientName: !Sub smartlockers-client-${EnvironmentKey}
       UserPoolId: !Ref SmartLockersUserPool
       GenerateSecret: false # Do not generate secret (frontend/mobile-friendly)
       ExplicitAuthFlows: # Allowed authentication flows
@@ -63,7 +63,7 @@ Resources:
   SmartLockersUserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Domain: smartlockers-auth-${EnvironmentKey} # Must be unique per AWS region
+      Domain: !Sub smartlockers-auth-${EnvironmentKey} # Must be unique per AWS region
       UserPoolId: !Ref SmartLockersUserPool
 
   # User Group for administrators
