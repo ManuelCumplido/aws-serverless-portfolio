@@ -21,19 +21,57 @@ Parameters:
 # Each policy grants only the permissions required for a specific use case
 # This shows how to apply principle of least privilege.   
 Resources:
-  LockerDynamoDBReadWritePolicy:
+  LockerDynamoDBCreatePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub "locker-dynamodb-put-policy-${EnvironmentKey}"
+      ManagedPolicyName: !Sub "locker-dynamodb-create-policy-${EnvironmentKey}"
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Action:
-              #- dynamodb:PutItem
-              #- dynamodb:GetItem
+              - dynamodb:PutItem
+            Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/LockersTable-${EnvironmentKey}"
+
+  LockerDynamoDBReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "locker-dynamodb-read-policy-${EnvironmentKey}"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Scan
+              - dynamodb:DescribeTable
+              - dynamodb:Query
+            Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/LockersTable-${EnvironmentKey}"
+
+  LockerDynamoDBUpdatePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "locker-dynamodb-update-policy-${EnvironmentKey}"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
               - dynamodb:UpdateItem
-              #- dynamodb:DeleteItem
+              - dynamodb:GetItem
+            Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/LockersTable-${EnvironmentKey}"
+
+  LockerDynamoDBDeletePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "locker-dynamodb-delete-policy-${EnvironmentKey}"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:DeleteItem
+              - dynamodb:GetItem
             Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/LockersTable-${EnvironmentKey}"
 
   # Role for CreateLocker Lambda
@@ -50,7 +88,71 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole # Grants Lambda permissions to write logs in CloudWatch
-        - !Ref LockerDynamoDBReadWritePolicy # Custom DynamoDB policy
+        - !Ref LockerDynamoDBCreatePolicy # Custom DynamoDB policy
+
+  # Role for ListLockers Lambda
+  ListLockersLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "list-lockers-role-${EnvironmentKey}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole # Grants Lambda permissions to write logs in CloudWatch
+        - !Ref LockerDynamoDBReadPolicy # Custom DynamoDB policy
+
+  # Role for GetLocker Lambda
+  GetLockerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "get-locker-role-${EnvironmentKey}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref LockerDynamoDBReadPolicy
+
+  # Role for UpdateLocker Lambda
+  UpdateLockerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "update-locker-role-${EnvironmentKey}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref LockerDynamoDBUpdatePolicy
+
+  # Role for DeleteLocker Lambda
+  DeleteLockerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "delete-locker-role-${EnvironmentKey}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref LockerDynamoDBDeletePolicy
 
 # Export the Lambda role ARN so it can be imported by the Lambda stack.
 # Using EnvironmentKey ensures unique exports across environments.
@@ -60,3 +162,27 @@ Outputs:
     Value: !GetAtt CreateLockerLambdaRole.Arn
     Export:
       Name: !Sub "CreateLockerLambdaRoleArn-${EnvironmentKey}"
+
+  ListLockersLambdaRoleArn:
+    Description: ARN of the role for ListLockers Lambda
+    Value: !GetAtt ListLockersLambdaRole.Arn
+    Export:
+      Name: !Sub "ListLockersLambdaRoleArn-${EnvironmentKey}"
+
+  GetLockerLambdaRoleArn:
+    Description: ARN of the role for GetLocker Lambda
+    Value: !GetAtt GetLockerLambdaRole.Arn
+    Export:
+      Name: !Sub "GetLockerLambdaRoleArn-${EnvironmentKey}"
+
+  UpdateLockerLambdaRoleArn:
+    Description: ARN of the role for UpdateLocker Lambda
+    Value: !GetAtt UpdateLockerLambdaRole.Arn
+    Export:
+      Name: !Sub "UpdateLockerLambdaRoleArn-${EnvironmentKey}"
+
+  DeleteLockerLambdaRoleArn:
+    Description: ARN of the role for DeleteLocker Lambda
+    Value: !GetAtt DeleteLockerLambdaRole.Arn
+    Export:
+      Name: !Sub "DeleteLockerLambdaRoleArn-${EnvironmentKey}"

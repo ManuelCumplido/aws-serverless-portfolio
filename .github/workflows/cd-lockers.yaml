@@ -1,0 +1,48 @@
+name: CD - SmartLockers
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  cd-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          version: 1.*
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::813858483616:role/OIDC-GitHubActions-Role
+          aws-region: us-east-1
+
+      # Deploy IAM stack
+      - name: Deploy IAM stack
+        working-directory: aws-backend
+        run: sam deploy --config-file samconfig-staging.toml --config-env iam-staging --no-confirm-changeset --no-fail-on-empty-changeset
+
+      # Deploy DynamoDB stack
+      - name: Deploy DynamoDB stack
+        working-directory: aws-backend
+        run: sam deploy --config-file samconfig-staging.toml --config-env dynamodb-staging --no-confirm-changeset --no-fail-on-empty-changeset
+
+      # Deploy Cognito stack
+      - name: Deploy Cognito stack
+        working-directory: aws-backend
+        run: sam deploy --config-file samconfig-staging.toml --config-env cognito-staging --no-confirm-changeset --no-fail-on-empty-changeset
+
+      # Deploy API Gateway + Lambdas stack
+      - name: Deploy API stack
+        working-directory: aws-backend/infrastructure/api-gateway-lambdas
+        run: sam deploy --config-file samconfig-staging.toml --config-env api-staging --no-confirm-changeset --no-fail-on-empty-changeset

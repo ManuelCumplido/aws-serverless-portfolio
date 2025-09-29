@@ -6,6 +6,14 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: "AWS::Serverless-2016-10-31"
 Description: SAM Template for SmartLocker REST API Gateway (demo project)
 
+Globals:
+  Function:
+    Runtime: nodejs20.x       # Default runtime for all Lambda functions (Node.js 20)
+    Handler: index.handler    # Standard entry point (index.js with "exports.handler")
+    MemorySize: 128           # Default memory allocation in MB (lightweight baseline)
+    Timeout: 3                # Maximum execution time in seconds (prevents long-running tasks)
+    Tracing: Active           # Enables AWS X-Ray tracing for all Lambda functions
+
 # EnvironmentKey parameter allows multi-environment deployments.
 # Avoids hardcoding "dev/prod" and simplifies CI/CD pipelines.
 Parameters:
@@ -34,6 +42,13 @@ Resources:
       Variables:
         EnvironmentKey: !Ref EnvironmentKey # Stage variable accessible inside API Gateway
 
+      MethodSettings:
+        - LoggingLevel: INFO          # Enables execution logging at INFO level (can be INFO or ERROR).
+          DataTraceEnabled: true      # Logs full request/response payloads (be careful with sensitive data).
+          MetricsEnabled: true        # Publishes detailed API Gateway metrics to CloudWatch.
+          ResourcePath: "/*"          # Applies these settings to all resources (endpoints) in the API.
+          HttpMethod: "*"             # Applies these settings to all HTTP methods (GET, POST, etc.).
+
       DefinitionBody:
         openapi: "3.0.3"
         info:
@@ -59,13 +74,112 @@ Resources:
                   description: "200 response"
               x-amazon-apigateway-integration:
                 type: aws_proxy
-                httpMethod: POST
+                httpMethod: POST # API Gateway always invokes Lambda with POST regardless of the client method.
                 uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:create-locker-${EnvironmentKey}/invocations
                 responses:
                   default:
                     statusCode: "200"
                 passthroughBehavior: when_no_match
                 contentHandling: CONVERT_TO_TEXT
+
+            get:
+              parameters:
+                - name: Content-Type
+                  in: header
+                  required: true
+                  schema:
+                    type: string
+              responses:
+                "200":
+                  description: "200 response"
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST # API Gateway always invokes Lambda with POST regardless of the client method.
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:list-lockers-${EnvironmentKey}/invocations
+                responses:
+                  default:
+                    statusCode: "200"
+       
+          /lockers/{id}:
+            get:
+              parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: Content-Type
+                  in: header
+                  required: true
+                  schema:
+                    type: string
+              responses:
+                "200":
+                  description: "Locker found"
+                "404":
+                  description: "Locker not found"
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:get-locker-${EnvironmentKey}/invocations
+                responses:
+                  default:
+                    statusCode: "200"
+        
+            put:
+              parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: Content-Type
+                  in: header
+                  required: true
+                  schema:
+                    type: string
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+              responses:
+                "200":
+                  description: "Locker updated"
+                "404":
+                  description: "Locker not found"
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:update-locker-${EnvironmentKey}/invocations
+                responses:
+                  default:
+                    statusCode: "200"
+        
+            delete:
+              parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: Content-Type
+                  in: header
+                  required: true
+                  schema:
+                    type: string
+              responses:
+                "204":
+                  description: "Locker deleted"
+                "404":
+                  description: "Locker not found"
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:delete-locker-${EnvironmentKey}/invocations
+                responses:
+                  default:
+                    statusCode: "200"
 
       Auth:
         DefaultAuthorizer: CognitoAuthorizer
@@ -102,25 +216,21 @@ Resources:
                 Action: "*"
                 Resource: "*"
 
+  ###
   CreateLockerLambda:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "create-locker-${EnvironmentKey}" # Function name with environment suffix
       CodeUri: ../../src/create-locker/ # Source code location for the Lambda
       Description: Handles POST /lockers to create new locker entries in database
-      Handler: index.handler
-      Runtime: nodejs20.x
-      MemorySize: 128
-      Timeout: 3 # Explicit timeout (default is 3s). Defines max execution time
       Role: 
         Fn::ImportValue: 
           Fn::Sub: "CreateLockerLambdaRoleArn-${EnvironmentKey}"
       Environment:
         Variables:
-          TABLE_NAME: 
+          LOCKERS_TABLE: 
             Fn::ImportValue:
               Fn::Sub: "LockersTableName-${EnvironmentKey}" # DynamoDB table (dynamic per environment)
-          REGION: !Ref "AWS::Region" # AWS region where this Lambda is deployed
       Events:
         ApiEvent:
           Type: Api
@@ -136,4 +246,123 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /aws/lambda/${CreateLockerLambda}
+      RetentionInDays: 14
+
+  ###
+  ListLockersLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "list-lockers-${EnvironmentKey}" # Function name with environment suffix
+      CodeUri: ../../src/list-lockers/ # Source code location for the Lambda
+      Description: Handles GET /lockers to list all lockers
+      Role: 
+        Fn::ImportValue: 
+          Fn::Sub: "ListLockersLambdaRoleArn-${EnvironmentKey}"
+      Environment:
+        Variables:
+          LOCKERS_TABLE: 
+            Fn::ImportValue:
+              Fn::Sub: "LockersTableName-${EnvironmentKey}" # DynamoDB table (dynamic per environment)
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SmartLockerApiGateway
+            Path: /lockers
+            Method: GET # Exposes this Lambda through API Gateway (GET /lockers)
+
+  # Explicit log group for Lambda
+  # - Retention is set to 14 days to reduce costs and avoid keeping unnecessary logs.
+  # - Without this, CloudWatch would create the log group automatically with no retention policy (infinite storage)
+  ListLockersLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ListLockersLambda}
+      RetentionInDays: 14
+
+  ###
+  GetLockerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "get-locker-${EnvironmentKey}"
+      CodeUri: ../../src/get-locker/
+      Description: Handles GET /lockers/{id} to get attributes of a locker
+      Role: 
+        Fn::ImportValue: 
+          Fn::Sub: "GetLockerLambdaRoleArn-${EnvironmentKey}"
+      Environment:
+        Variables:
+          LOCKERS_TABLE: 
+            Fn::ImportValue:
+              Fn::Sub: "LockersTableName-${EnvironmentKey}"
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SmartLockerApiGateway
+            Path: /lockers/{id}
+            Method: GET
+
+  GetLockerLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${GetLockerLambda}
+      RetentionInDays: 14
+
+  ###
+  UpdateLockerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "update-locker-${EnvironmentKey}"
+      CodeUri: ../../src/update-locker/
+      Description: Handles Put /lockers/{id} to update attributes of a locker
+      Role: 
+        Fn::ImportValue: 
+          Fn::Sub: "UpdateLockerLambdaRoleArn-${EnvironmentKey}"
+      Environment:
+        Variables:
+          LOCKERS_TABLE: 
+            Fn::ImportValue:
+              Fn::Sub: "LockersTableName-${EnvironmentKey}"
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SmartLockerApiGateway
+            Path: /lockers/{id}
+            Method: PUT
+
+  UpdateLockerLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${UpdateLockerLambda}
+      RetentionInDays: 14
+
+  ###
+  DeleteLockerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "delete-locker-${EnvironmentKey}"
+      CodeUri: ../../src/delete-locker/
+      Description: Handles Delete /lockers/{id} to Delete a locker
+      Role: 
+        Fn::ImportValue: 
+          Fn::Sub: "DeleteLockerLambdaRoleArn-${EnvironmentKey}"
+      Environment:
+        Variables:
+          LOCKERS_TABLE: 
+            Fn::ImportValue:
+              Fn::Sub: "LockersTableName-${EnvironmentKey}"
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SmartLockerApiGateway
+            Path: /lockers/{id}
+            Method: DELETE
+
+  DeleteLockerLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${DeleteLockerLambda}
       RetentionInDays: 14
