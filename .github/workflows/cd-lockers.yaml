@@ -3,6 +3,9 @@ name: CD - SmartLockers
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [develop]
+    types: [opened, reopened, synchronize]
 
 jobs:
   cd-staging:
