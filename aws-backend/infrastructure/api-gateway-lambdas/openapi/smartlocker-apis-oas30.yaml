@@ -16,6 +16,8 @@ paths:
   /lockers:
     post:
       x-amazon-apigateway-request-validator: all
+      x-amazon-apigateway-request-models:
+        application/json: CreateLockerRequest 
       parameters:
         - name: Content-Type
           in: header
@@ -78,6 +80,8 @@ paths:
 
     put:
       x-amazon-apigateway-request-validator: all
+      x-amazon-apigateway-request-models:
+        application/json: UpdateLockerRequest
       parameters:
         - name: id
           in: path
