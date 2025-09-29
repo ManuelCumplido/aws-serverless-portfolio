@@ -7,9 +7,15 @@ info:
 security:
   - CognitoAuthorizer: []
 
+x-amazon-apigateway-request-validators:
+  all:
+    validateRequestBody: true
+    validateRequestParameters: true
+
 paths:
   /lockers:
     post:
+      x-amazon-apigateway-request-validator: all
       parameters:
         - name: Content-Type
           in: header
@@ -71,6 +77,7 @@ paths:
             statusCode: "200"
 
     put:
+      x-amazon-apigateway-request-validator: all
       parameters:
         - name: id
           in: path
