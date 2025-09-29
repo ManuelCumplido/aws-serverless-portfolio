@@ -11,6 +11,16 @@ x-amazon-apigateway-request-validators:
   all:
     validateRequestBody: true
     validateRequestParameters: true
+    
+x-amazon-apigateway-models:
+  CreateLockerRequest:
+    contentType: application/json
+    schema: 
+      $ref: "#/components/schemas/CreateLockerRequest"
+  UpdateLockerRequest:
+    contentType: application/json
+    schema:
+      $ref: "#/components/schemas/UpdateLockerRequest"
 
 paths:
   /lockers:
