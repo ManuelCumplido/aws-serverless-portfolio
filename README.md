@@ -1,26 +1,18 @@
 # 📦 AWS Serverless Portfolio
 📌 Overview
 
-This project demonstrates a serverless architecture on AWS, showcasing a secure API built with API Gateway, Lambda, DynamoDB, Cognito, and IAM.
-It was designed as part of my professional portfolio to highlight best practices in serverless development, infrastructure as code (IaC) using AWS SAM and AWS CloudFormation, and CI/CD automation.
+This portfolio project demonstrates how to design and implement a real-world serverless solution on AWS. It includes a secure CRUD API built with API Gateway, Lambda, DynamoDB, and Cognito, with IAM roles enforcing least privilege. The project highlights best practices in serverless architecture, infrastructure as code (IaC) with AWS SAM/CloudFormation, and automated CI/CD pipelines.
 
 ---
 
-## 🚀 Architecture
+## 🏗️ Architecture
 
-- Amazon API Gateway (REST) – Entry point for client requests.
-  
-- Amazon Cognito – User authentication and identity management.
-
-- AWS IAM Roles & Policies – Fine-grained authorization for Lambda and AWS resources.
-
-- AWS Lambda – Stateless business logic.
-
-- Amazon DynamoDB – NoSQL storage.
-
-- AWS SAM (IaC) – Infrastructure definition using simplified syntax.
-
-- AWS CloudFormation – Orchestrates and provisions AWS resources from SAM templates.
+- **API Gateway (REST + WebSocket)** → Manages communication between clients and backend.  
+- **AWS Lambda (Node.js 20)** → Implements business logic.  
+- **DynamoDB** → Stores device and user data in a scalable way.  
+- **Cognito** → Provides secure authentication and authorization.  
+- **IAM Roles & Policies** → Fine-grained access control following the principle of least privilege.  
+- **CI/CD with GitHub Actions** → Automated build, test, and deployment pipeline.
 
 ---
 
@@ -32,19 +24,27 @@ It was designed as part of my professional portfolio to highlight best practices
 
 ## 🛠️ Tech Stack
 
-- Languages: Node.js (JavaScript)
+**Languages**  
+- Node.js (JavaScript)
 
-- AWS Services: Lambda, API Gateway, Cognito, IAM, DynamoDB
+**AWS Services**  
+- Lambda – serverless compute  
+- API Gateway – REST API management  
+- Cognito – authentication & identity  
+- IAM – access control  
+- DynamoDB – NoSQL database  
 
-- Infrastructure: AWS SAM (CloudFormation)
+**Infrastructure as Code**  
+- AWS SAM (built on CloudFormation)  
 
-- CI/CD: GitHub Actions
+**CI/CD**  
+- GitHub Actions (build, test, deploy pipelines)  
 
 ---
 
 ## 📂 Infrastructure Stacks
 - [IAM Stack](aws-backend/infrastructure/iam/README.md) – Lambda role & DynamoDB policy
-- [DynamoDB Stack](aws-backend/infrastructure/database/README.md) – NoSQL table
+- [DynamoDB Stack](aws-backend/infrastructure/database/README.md) – NoSQL table for data persistence
 - [Cognito Stack](aws-backend/infrastructure/cognito/README.md) – Authentication & identity
 - [API Gateway Stack](aws-backend/infrastructure/api-gateway-lambdas/README.md) – REST endpoints
 
@@ -52,38 +52,50 @@ It was designed as part of my professional portfolio to highlight best practices
 
 ## ⚡ Features
 
-✅ Secure authentication and authorization with Cognito + IAM.
-
-✅ CRUD operations exposed via API Gateway + Lambda.
-
-✅ Data persistence with DynamoDB.
-
-✅ Infrastructure as Code with AWS SAM.
-
-✅ Automated deployment using GitHub Actions.
+✅ Secure authentication and authorization with Cognito + IAM  
+✅ CRUD operations exposed via API Gateway + Lambda  
+✅ Data persistence with DynamoDB (NoSQL)  
+✅ Infrastructure as Code with AWS SAM (built on CloudFormation)  
+✅ Automated build, test, and deployment with GitHub Actions  
+✅ Unit testing with Jest for Lambda functions  
+✅ Integration testing for API Gateway and DynamoDB flows  
+✅ Fine-grained IAM roles & policies following least privilege  
 
 ---
 
 ## 📂 Project Structure
 ```bash
 aws-serverless-portfolio/
-│── src/                # Lambda functions
+│── src/                # Lambda functions and unit tests
 │── infrastructure/     # SAM templates (API Gateway, DynamoDB, Cognito, IAM)
 │── docs/               # Architecture diagrams, documentation
-│── tests/              # Unit tests
+│── integration-tests/  # Integration tests
 │── .github/workflows/  # CI/CD pipelines
 │── README.md           # Project documentation
 ```
 ---
 
 ## 🧑‍💻 Getting Started
-Prerequisites
+### Prerequisites
 
-- AWS CLI configured with credentials
+Before running this project, make sure you have:
 
-- AWS SAM CLI installed
+- An **AWS account** with appropriate permissions  
+- **AWS CLI** configured with credentials  
+- **AWS SAM CLI** installed ([installation guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html))  
+- **Node.js** v18 or later + **npm**  
+- **Git** (to clone the repository)  
+---
 
-- Node.js >= 18
+## 📡 Endpoints
+
+| Method | Path          | Description                          |
+| ------ | ------------- | ------------------------------------ |
+| GET    | /lockers      | List all lockers                     |
+| GET    | /lockers/{id} | Get a single locker by ID            |
+| POST   | /lockers      | Create a new locker                  |
+| PUT    | /lockers/{id} | Update a locker                      |
+| DELETE | /lockers/{id} | Delete a locker                      |
 
 ---
 
@@ -95,31 +107,15 @@ Prerequisites
 
 ## 📈 CI/CD
 
-This project includes a GitHub Actions workflow that:
+This project uses **GitHub Actions** to automate the development and deployment workflow:
 
-- Runs linting and unit tests.
+- ✅ Run **unit tests** with Jest (Lambda business logic)  
+- ✅ Run **integration tests** (API Gateway + DynamoDB flows)  
+- ✅ Validate and build AWS SAM templates  
+- ✅ Package and deploy serverless resources to AWS  
+- ✅ Triggered automatically on pushes and pull requests to `develop` and `main`  
+- ✅ Cache Node.js dependencies to optimize build times  
 
-- Builds and packages the SAM template.
-
-- Deploys to AWS.
-
----
-
-## 📄 Example workflow:
-```bash
-name: Deploy to AWS
-on:
-  push:
-    branches: [ "main" ]
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/setup-sam@v2
-      - run: sam build
-      - run: sam deploy --no-confirm-changeset --stack-name serverless-portfolio
-```
 ---
 
 ## 👨‍💻 Author
