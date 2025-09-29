@@ -6,6 +6,7 @@
 # - Cognito Hosted UI Domain (unique per environment)
 # - Cognito User Groups (admins, users)
 # Exports the UserPoolId, UserPoolClientId, and Domain for cross-stack references
+
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Cognito SmartLockers User Pool, Client, Domain and Groups"
 
