@@ -1,4 +1,4 @@
-name: CI - SmartLockers
+name: CD - SmartLockers
 
 on:
   push:
